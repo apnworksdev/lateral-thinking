@@ -72,9 +72,29 @@ export async function getServicesPage(): Promise<ServicesPage | null> {
   );
 }
 
+export async function getArchiveProjects(): Promise<ArchiveProject[]> {
+  return loadQuery<ArchiveProject[]>(
+    groq`*[_type == "project" && placement in ["archive", "both"]] | order(date desc){
+      _id,
+      _type,
+      title,
+      client,
+      location,
+      date,
+      services,
+      categories[]->{
+        _id,
+        title,
+        "slug": slug.current
+      },
+      mainImage ${imageProjection}
+    }`,
+  );
+}
+
 export async function getProjects(): Promise<Project[]> {
   return loadQuery<Project[]>(
-    groq`*[_type == "project" && defined(slug.current)] | order(title asc){
+    groq`*[_type == "project" && defined(slug.current) && placement != "archive"] | order(title asc){
       _id,
       _type,
       title,
@@ -100,10 +120,7 @@ export async function getProject(slug: string): Promise<Project | null> {
       "slug": slug.current,
       client,
       description,
-      longDescription[]{
-        _key,
-        text
-      },
+      longDescription,
       categories[]->{
         _id,
         title,
@@ -230,7 +247,19 @@ export interface MediaItem {
 
 export interface ProjectExtra {
   _key: string;
-  text?: string;
+  text?: PortableTextBlock[];
+}
+
+export interface ArchiveProject {
+  _id: string;
+  _type: "project";
+  title?: string;
+  client?: string;
+  location?: string;
+  date?: string;
+  services?: string[];
+  categories?: ProjectCategory[];
+  mainImage?: SanityImage;
 }
 
 export interface Project {
@@ -239,8 +268,8 @@ export interface Project {
   title?: string;
   slug?: string;
   client?: string;
-  description?: string;
-  longDescription?: ProjectExtra[];
+  description?: PortableTextBlock[];
+  longDescription?: PortableTextBlock[];
   categories?: ProjectCategory[];
   cover?: MediaItem;
   files?: MediaItem[];

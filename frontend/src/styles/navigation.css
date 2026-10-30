@@ -11,7 +11,7 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
-  padding: 40px 30px;
+  padding: 40px 20px 40px 30px;
   --menu-text: #8b8d8c;
   --menu-muted: #8b8d8c;
   --menu-active: #8b8d8c;

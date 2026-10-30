@@ -1,10 +1,28 @@
 ---
+import { PortableText } from "astro-portabletext";
+import type { PortableTextBlock } from "@portabletext/types";
 import Menu from "../../components/Menu.astro";
+import TextLink from "../../components/TextLink.astro";
 import Layout from "../../layouts/Layout.astro";
 import { urlFor } from "../../utils/image";
 import { getProject } from "../../utils/sanity";
 import { vimeoPlayerUrl } from "../../utils/vimeo";
 import "../../styles/pages/work.css";
+
+const components = { mark: { link: TextLink } };
+
+function plainText(blocks?: PortableTextBlock[]) {
+  const text = blocks
+    ?.flatMap((block) =>
+      block._type === "block" && Array.isArray(block.children)
+        ? block.children.map((child) => ("text" in child ? child.text : ""))
+        : [],
+    )
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text || undefined;
+}
 
 const { slug } = Astro.params;
 const project = slug ? await getProject(slug) : null;
@@ -35,25 +53,27 @@ const files = (project.files ?? []).flatMap((file) => {
 });
 ---
 
-<Layout title={project.title || "Work"} description={project.description} fullBleed>
+<Layout title={project.title || "Work"} description={plainText(project.description)} fullBleed>
   <Menu />
   <article class="project">
     <header class="project__header">
-      {project.title && <h1 class="project__title neu-haas-display">{project.title}</h1>}
+      {(project.title || project.client) && (
+        <h1 class="project__title neu-haas-display">{project.client && <><span class="work__bracket">[</span>{project.client}]{" "}</>}{project.title}</h1>
+      )}
       {
-        project.categories && project.categories.length > 0 && (
-          <p class="project__categories bull-5-mono">
-            {project.categories.map((category) => category.title).filter(Boolean).join("  ")}
-          </p>
+        project.description && project.description.length > 0 && (
+          <div class="project__copy">
+            <PortableText value={project.description} components={components} />
+          </div>
         )
       }
-      {project.client && <p class="project__client bull-5-mono">{project.client}</p>}
-      {project.description && <p class="project__description">{project.description}</p>}
       {
-        project.longDescription && project.longDescription.length > 0 && (
-          <div class="project__long">
-            {project.longDescription.map((paragraph) => (
-              <p>{paragraph.text}</p>
+        project.extras && project.extras.length > 0 && (
+          <div class="project__extras">
+            {project.extras.map((extra) => (
+              <section class="project__copy">
+                {extra.text && <PortableText value={extra.text} components={components} />}
+              </section>
             ))}
           </div>
         )
@@ -65,9 +85,7 @@ const files = (project.files ?? []).flatMap((file) => {
           {files.map((file) => (
             <li>
               {file.source === "image" && <img src={file.src} alt={file.alt} />}
-              {file.source === "file" && (
-                <video src={file.src} controls playsinline />
-              )}
+              {file.source === "file" && <video src={file.src} controls playsinline />}
               {file.source === "vimeo" && (
                 <iframe src={file.src} title="Vídeo" allow="autoplay; fullscreen; picture-in-picture" />
               )}
@@ -77,13 +95,9 @@ const files = (project.files ?? []).flatMap((file) => {
       )
     }
     {
-      project.extras && project.extras.length > 0 && (
-        <div class="project__extras">
-          {project.extras.map((extra) => (
-            <section>
-              {extra.text && <p>{extra.text}</p>}
-            </section>
-          ))}
+      project.longDescription && project.longDescription.length > 0 && (
+        <div class="project__copy project__long">
+          <PortableText value={project.longDescription} components={components} />
         </div>
       )
     }

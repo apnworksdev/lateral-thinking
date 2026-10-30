@@ -1,11 +1,11 @@
 ---
 import Menu from "../../components/Menu.astro";
 import Layout from "../../layouts/Layout.astro";
-import { urlFor } from "../../utils/image";
 import { getProjects } from "../../utils/sanity";
 import "../../styles/pages/work.css";
 
 const projects = await getProjects();
+const listed = Array.from({ length: 4 }, () => projects).flat();
 const categories = [
   ...new Map(
     projects
@@ -18,26 +18,30 @@ const categories = [
 
 <Layout title="Work" fullBleed>
   <Menu />
+  {
+    categories.length > 0 && (
+      <div class="work__filters bull-5-mono" role="group" aria-label="Categorías">
+        <span class="work__filters-label"><span>[</span>filters<span>]</span></span>
+        <button type="button" data-filter="all" aria-pressed="true">
+          <span class="work__filters-bracket">[</span>
+          All
+          <span class="work__filters-bracket">]</span>
+        </button>
+        {categories.map((category) => (
+          <button type="button" data-filter={category.slug} aria-pressed="false">
+            <span class="work__filters-bracket">[</span>
+            {category.title}
+            <span class="work__filters-bracket">]</span>
+          </button>
+        ))}
+      </div>
+    )
+  }
   <section class="work">
     {
-      categories.length > 0 && (
-        <div class="work__filters bull-5-mono" role="group" aria-label="Categorías">
-          <button type="button" data-filter="all" aria-pressed="true">
-            All
-          </button>
-          {categories.map((category) => (
-            <button type="button" data-filter={category.slug} aria-pressed="false">
-              {category.title}
-            </button>
-          ))}
-        </div>
-      )
-    }
-    {
-      projects.length > 0 ? (
+      listed.length > 0 ? (
         <ul class="work__list">
-          {projects.map((project) => {
-            const image = project.cover?.source === "image" ? project.cover.image : undefined;
+          {listed.map((project) => {
             const slugs = (project.categories ?? [])
               .map((category) => category.slug)
               .filter(Boolean)
@@ -45,14 +49,10 @@ const categories = [
             return (
               <li data-categories={slugs}>
                 <a href={`/work/${project.slug}`}>
-                  {image?.asset && (
-                    <img
-                      src={urlFor(image).width(800).auto("format").quality(80).url()}
-                      alt={project.cover?.alt || ""}
-                    />
-                  )}
-                  <span class="work__title neu-haas-display">{project.title}</span>
-                  {project.client && <span class="work__client bull-5-mono">{project.client}</span>}
+                  <span class="work__title neu-haas-display--lg">
+                    {project.client && <><span class="work__bracket">[</span>{`${project.client}] `}</>}
+                    {project.title}
+                  </span>
                 </a>
               </li>
             );

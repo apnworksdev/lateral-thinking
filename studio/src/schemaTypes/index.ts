@@ -9,6 +9,7 @@ import usPage from './documents/usPage'
 import post from './documents/post'
 import blockContent from './objects/blockContent'
 import mediaItem from './objects/mediaItem'
+import richText from './objects/richText'
 import seo from './objects/seo'
 
 // Export an array of all the schema types.  This is used in the Sanity Studio configuration. https://www.sanity.io/docs/schema-types
@@ -25,5 +26,6 @@ export const schemaTypes = [
   post,
   blockContent,
   mediaItem,
+  richText,
   seo,
 ]

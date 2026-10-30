@@ -17,18 +17,43 @@
 }
 
 :root {
-  --font-neu-haas-size: 38px;
-  --font-neu-haas-size-lg: 120px;
-  --font-neu-haas-size-sm: 18px;
+  /* Valores en una pantalla de 1920px de ancho.
+     Mínimo: la de 11px no baja de 9px. Máximo: la Neue grande no pasa de 140px. */
+  --font-min: calc(9 / 11);
+  --font-max: calc(140 / 100);
+  --font-neu-haas-size: clamp(
+    calc(38px * var(--font-min)),
+    calc(38 / 1920 * 100vw),
+    calc(38px * var(--font-max))
+  );
+  --font-neu-haas-size-lg: clamp(
+    calc(100px * var(--font-min)),
+    calc(100 / 1920 * 100vw),
+    140px
+  );
+  --font-neu-haas-size-sm: clamp(
+    calc(18px * var(--font-min)),
+    calc(18 / 1920 * 100vw),
+    calc(18px * var(--font-max))
+  );
   --font-neu-haas-line: 1;
-  --font-bull-size: 16px;
-  --font-bull-size-sm: 11px;
+  --font-bull-size: clamp(
+    calc(16px * var(--font-min)),
+    calc(16 / 1920 * 100vw),
+    calc(16px * var(--font-max))
+  );
+  --font-bull-size-sm: clamp(9px, calc(11 / 1920 * 100vw), calc(11px * var(--font-max)));
 }
 
 html {
   background-color: var(--color-white);
   font-family: var(--font-sans);
   text-size-adjust: 100%;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 body {
@@ -44,10 +69,15 @@ body {
 
 .neu-haas-display--lg {
   font-size: var(--font-neu-haas-size-lg);
+  font-weight: 700;
 }
 
 .neu-haas-display--sm {
   font-size: var(--font-neu-haas-size-sm);
+}
+
+.uppercase {
+  text-transform: uppercase;
 }
 
 .bull-5-mono {

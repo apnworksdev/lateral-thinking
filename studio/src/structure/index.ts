@@ -1,4 +1,4 @@
-import {ArchiveIcon, CaseIcon, EnvelopeIcon, HomeIcon, ImagesIcon, ProjectsIcon, TagIcon, UsersIcon} from '@sanity/icons'
+import {CaseIcon, EnvelopeIcon, HomeIcon, ImagesIcon, ProjectsIcon, TagIcon, UsersIcon} from '@sanity/icons'
 import type {StructureResolver} from 'sanity/structure'
 
 const SINGLETONS = ['homePage', 'contactPage', 'usPage', 'servicesPage', 'introPage']
@@ -44,10 +44,6 @@ export const structure: StructureResolver = (S) =>
                 .child(S.documentTypeList('category').title('Categorías')),
             ]),
         ),
-      S.listItem()
-        .title('Archivo')
-        .icon(ArchiveIcon)
-        .child(S.documentTypeList('archiveProject').title('Archivo')),
       S.divider(),
       ...S.documentTypeListItems().filter(
         (listItem) =>
