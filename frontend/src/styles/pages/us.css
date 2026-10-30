@@ -1,0 +1,282 @@
+.us {
+  display: grid;
+  grid-template-columns: repeat(15, minmax(0, 1fr));
+  column-gap: 40px;
+  row-gap: 80px;
+}
+
+.us__scene {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  grid-column: 8 / span 8;
+  height: 100dvh;
+  min-height: 640px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.us__lines {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.us__lines line {
+  stroke: #777877;
+  stroke-width: 1;
+}
+
+.us__node {
+  position: absolute;
+  z-index: 1;
+  left: 8%;
+  top: 52%;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: #909291;
+  border: 1px solid #777877;
+  box-sizing: border-box;
+  transform: translate(-50%, -50%);
+}
+
+.us__node--small {
+  z-index: 3;
+  left: calc(8% + 108.77px);
+  top: calc(52% - 8.95px);
+  width: 38.75px;
+  height: 80.61px;
+  transform: translate(-50%, -50%) rotate(-41.94deg);
+}
+
+.us__gallery {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.us__gallery li {
+  position: absolute;
+  z-index: 3;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  transform: translate(-50%, -50%);
+}
+
+.us__gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.us__sections {
+  position: relative;
+  display: flex;
+  grid-column: 1 / 8;
+  grid-row: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 48px;
+  min-height: 100dvh;
+  padding: 40px 0px 40px 70px;
+}
+
+.us__section {
+  display: flex;
+  flex-direction: column;
+  gap: 38px;
+}
+
+.us__title {
+  margin: 0;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.us__text p {
+  margin: 0 0 12px;
+}
+
+.us__text p:last-child {
+  margin-bottom: 0;
+}
+
+.us__text a,
+.us-form-open {
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+}
+
+.us-form-open {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.us-form {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #fff;
+}
+
+.us-form__panel {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100dvh;
+  overflow: auto;
+  scrollbar-width: none;
+  padding: 40px 0px 40px 70px;
+}
+
+.us-form__panel::-webkit-scrollbar {
+  display: none;
+}
+
+.us-form__back {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.us-form__title {
+  margin: 0;
+  white-space: pre-line;
+  padding-bottom: 21px;
+}
+
+.us-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  max-width: 500px;
+}
+
+.us-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.us-form__field input,
+.us-form__field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #000;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  color: #000;
+  caret-color: #000;
+  font-family: "Bull 5 Mono", monospace;
+  font-size: var(--font-bull-size);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.us-form__field input:focus,
+.us-form__field textarea:focus {
+  outline: none;
+  border-color: #000;
+  box-shadow: none;
+}
+
+.us-form__field textarea {
+  min-height: 120px;
+  resize: none;
+}
+
+.us-form__status {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.us-empty {
+  padding: 40px;
+}
+
+html.intro-open {
+  overflow: hidden;
+}
+
+html:not(.intro-open) .intro {
+  display: none;
+}
+
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: #fff;
+  cursor: pointer;
+  transition: opacity 0.7s ease;
+}
+
+.intro.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.intro .us__node,
+.intro .us__lines,
+.intro .us__gallery li {
+  opacity: 0;
+}
+
+.intro.is-circles .us__node {
+  opacity: 1;
+  transition: opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.intro.is-images .us__gallery li {
+  opacity: 1;
+  transition: opacity 1.2s ease;
+}
+
+.intro.is-lines .us__lines {
+  opacity: 1;
+}
+
+.intro a {
+  pointer-events: none;
+}
+
+.intro .us__scene {
+  overflow: visible;
+}
+
+.intro .us__node,
+.intro .us__node--small {
+  position: fixed;
+}
+
+.intro .us__node {
+  left: 50%;
+  top: 50%;
+}
+
+.intro .us__node--small {
+  left: calc(50% + 108.77px);
+  top: calc(50% - 8.95px);
+}

@@ -1,0 +1,20 @@
+---
+import HomePage from "../components/HomePage.astro";
+import Menu from "../components/Menu.astro";
+import Layout from "../layouts/Layout.astro";
+import { getContactPage } from "../utils/sanity";
+import "../styles/pages/index.css";
+
+const contact = await getContactPage();
+---
+
+<Layout title="Contact" description={contact?.headline} fullBleed>
+  <Menu />
+  {
+    contact ? (
+      <HomePage home={contact} />
+    ) : (
+      <p class="home-empty">Publica Contact en el Studio para verla aquí.</p>
+    )
+  }
+</Layout>

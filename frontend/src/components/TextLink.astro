@@ -1,0 +1,17 @@
+---
+import { stegaClean } from "@sanity/client/stega";
+
+const raw = stegaClean(Astro.props.node?.markDef?.href ?? "");
+
+function linkHref(value: string) {
+  const href = value.trim();
+  if (!href || /^(https?:|mailto:|tel:|\/|#)/i.test(href)) return href;
+  if (href.includes("@")) return `mailto:${href}`;
+  if (/^\+?[\d\s()-]{6,}$/.test(href)) return `tel:${href.replace(/\s/g, "")}`;
+  return href;
+}
+
+const href = linkHref(raw);
+---
+
+<a href={href}><slot /></a>

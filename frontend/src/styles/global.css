@@ -1,0 +1,61 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --font-serif: "PT Serif", serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --color-white: #fff;
+  --color-grey: #e5e5e5;
+  --color-grey-dark: #838584;
+  --color-black: #101112;
+  --color-gray-200: #ced2d9;
+  --color-gray-600: #6e7683;
+  --color-blue-600: #1e61cd;
+  --color-magenta-100: #f9d7eb;
+}
+
+:root {
+  --font-neu-haas-size: 38px;
+  --font-neu-haas-size-lg: 120px;
+  --font-neu-haas-size-sm: 18px;
+  --font-neu-haas-line: 1;
+  --font-bull-size: 16px;
+  --font-bull-size-sm: 11px;
+}
+
+html {
+  background-color: var(--color-white);
+  font-family: var(--font-sans);
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+.neu-haas-display {
+  font-family: "Neue Haas Display", sans-serif;
+  font-weight: 700;
+  font-size: var(--font-neu-haas-size);
+  line-height: var(--font-neu-haas-line);
+}
+
+.neu-haas-display--lg {
+  font-size: var(--font-neu-haas-size-lg);
+}
+
+.neu-haas-display--sm {
+  font-size: var(--font-neu-haas-size-sm);
+}
+
+.bull-5-mono {
+  font-family: "Bull 5 Mono", monospace;
+  font-weight: 400;
+  font-size: var(--font-bull-size);
+}
+
+.bull-5-mono--sm {
+  font-size: var(--font-bull-size-sm);
+}

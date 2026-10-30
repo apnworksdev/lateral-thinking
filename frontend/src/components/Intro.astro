@@ -1,0 +1,252 @@
+---
+import { urlFor } from "../utils/image";
+import { getIntroPage } from "../utils/sanity";
+import "../styles/pages/us.css";
+
+const page = await getIntroPage();
+
+const slots = [
+  { x: 28, y: 16, w: 150 },
+  { x: 42, y: 7, w: 96 },
+  { x: 56, y: 11, w: 124 },
+  { x: 82, y: 14, w: 196 },
+  { x: 52, y: 30, w: 156 },
+  { x: 32, y: 38, w: 132 },
+  { x: 66, y: 42, w: 148 },
+  { x: 88, y: 36, w: 108 },
+  { x: 72, y: 56, w: 164 },
+  { x: 90, y: 64, w: 136 },
+  { x: 46, y: 60, w: 154 },
+  { x: 26, y: 74, w: 124 },
+  { x: 70, y: 76, w: 200 },
+  { x: 36, y: 90, w: 176 },
+  { x: 74, y: 92, w: 210 },
+];
+
+function place(index: number) {
+  const slot = slots[index];
+  if (slot) return slot;
+  const n = index - slots.length;
+  const angle = -1.1 + n * 0.65;
+  return {
+    x: Math.min(88, Math.max(24, 58 + Math.cos(angle) * 26)),
+    y: Math.min(90, Math.max(12, 50 + Math.sin(angle) * 38)),
+    w: 140,
+  };
+}
+
+const images = (page?.images ?? []).flatMap((image) => {
+  if (!image.asset) return [];
+  return [
+    {
+      key: image.asset._ref,
+      alt: image.alt || "",
+      src: urlFor(image).width(800).auto("format").quality(80).url(),
+    },
+  ];
+});
+---
+
+{
+  images.length > 0 && (
+    <div class="intro" data-intro>
+      <div class="us">
+        <div class="us__scene" data-us-scene>
+          <svg class="us__lines" aria-hidden="true"></svg>
+          <div class="us__node" data-us-node aria-hidden="true"></div>
+          <div class="us__node us__node--small" aria-hidden="true"></div>
+          <ul class="us__gallery">
+            {images.map((image, index) => {
+              const spot = place(index);
+              return (
+                <li style={`--x: ${spot.x}%; --y: ${spot.y}%; --w: ${spot.w}px`}>
+                  <img src={image.src} alt={image.alt} />
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+<script>
+  const intro = document.querySelector("[data-intro]");
+  if (!(intro instanceof HTMLElement)) {
+    document.documentElement.classList.remove("intro-open");
+  } else if (!document.documentElement.classList.contains("intro-open")) {
+    intro.remove();
+  } else {
+    const scene = intro.querySelector("[data-us-scene]");
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const enter = () => {
+      if (!intro.isConnected || intro.classList.contains("is-leaving")) return;
+      document.cookie = "lt-intro=1; Max-Age=604800; Path=/; SameSite=Lax";
+      intro.classList.add("is-leaving");
+      window.setTimeout(() => {
+        document.documentElement.classList.remove("intro-open");
+        intro.remove();
+      }, 700);
+    };
+
+    intro.addEventListener("click", (event) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest("a")) return;
+      enter();
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") enter();
+    });
+
+    if (!(scene instanceof HTMLElement)) {
+      intro.classList.add("is-circles", "is-lines", "is-images");
+    } else {
+      const svg = scene.querySelector(".us__lines");
+      const node = scene.querySelector("[data-us-node]");
+      const items = [...scene.querySelectorAll(".us__gallery li")];
+
+      if (svg instanceof SVGSVGElement && node instanceof HTMLElement && items.length > 0) {
+        const lines = items.map(() => {
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          svg.appendChild(line);
+          return line;
+        });
+
+        const motion = items.map((_, index) => ({
+          phase: index * 1.37,
+          ax: 16 + (index % 5) * 3,
+          ay: 12 + (index % 4) * 4,
+          sx: 0.45 + (index % 3) * 0.12,
+          sy: 0.32 + (index % 4) * 0.09,
+        }));
+
+        let moving = reduced;
+        let moveBlend = 0;
+        let energy = 1;
+        let clock = 0;
+        let last = performance.now();
+        let pointerX: number | null = null;
+        let pointerY: number | null = null;
+        let lineProgress = reduced ? 1 : 0;
+        let lineStartedAt: number | null = null;
+        let imagesShown = reduced;
+        let restBoxes: DOMRect[] | null = null;
+        const lineDuration = 1800;
+        const screenMargin = 48;
+
+        const fitToScreen = () => {
+          items.forEach((item) => {
+            const box = item.getBoundingClientRect();
+            if (box.height < 2) return;
+            let shift = 0;
+            if (box.top < screenMargin) shift = screenMargin - box.top;
+            const overflow = box.bottom + shift - (window.innerHeight - screenMargin);
+            if (overflow > 1) shift -= overflow;
+            if (Math.abs(shift) > 1) {
+              const current = parseFloat(getComputedStyle(item).top);
+              item.style.top = `${current + shift}px`;
+            }
+          });
+        };
+
+        const easeInOut = (t: number) =>
+          t < 0.5 ? 4 * t * t * t : 1 - ((-2 * t + 2) ** 3) / 2;
+
+        const draw = () => {
+          const sceneRect = scene.getBoundingClientRect();
+          const nodeRect = node.getBoundingClientRect();
+          const x1 = nodeRect.left + nodeRect.width / 2 - sceneRect.left;
+          const y1 = nodeRect.top + nodeRect.height / 2 - sceneRect.top;
+
+          items.forEach((item, index) => {
+            const rect = item.getBoundingClientRect();
+            const x2 = rect.left - sceneRect.left;
+            const y2 = rect.top - sceneRect.top;
+            const length = Math.hypot(x2 - x1, y2 - y1);
+            const line = lines[index];
+            line.setAttribute("x1", String(x1));
+            line.setAttribute("y1", String(y1));
+            line.setAttribute("x2", String(x2));
+            line.setAttribute("y2", String(y2));
+            line.style.strokeDasharray = String(length);
+            line.style.strokeDashoffset = String(length * (1 - lineProgress));
+          });
+        };
+
+        window.addEventListener("pointermove", (event) => {
+          if (!moving || pointerX === null || pointerY === null) {
+            pointerX = event.clientX;
+            pointerY = event.clientY;
+            return;
+          }
+          const dist = Math.hypot(event.clientX - pointerX, event.clientY - pointerY);
+          energy = Math.min(7, energy + dist * 0.02);
+          pointerX = event.clientX;
+          pointerY = event.clientY;
+        });
+
+        const tick = (now: number) => {
+          if (!intro.isConnected) return;
+          if (lineStartedAt !== null && lineProgress < 1) {
+            const t = Math.min(1, (now - lineStartedAt) / lineDuration);
+            lineProgress = easeInOut(t);
+            if (t === 1 && !imagesShown) {
+              lineProgress = 1;
+              imagesShown = true;
+              show("is-images");
+              window.setTimeout(() => {
+                moving = true;
+                last = performance.now();
+              }, 1200);
+            }
+          }
+          if (!moving) fitToScreen();
+          if (moving && !reduced) {
+            if (!restBoxes) restBoxes = items.map((item) => item.getBoundingClientRect());
+            const dt = Math.min(0.05, (now - last) / 1000);
+            last = now;
+            energy += (1 - energy) * 0.025;
+            clock += dt * energy;
+            moveBlend = Math.min(1, moveBlend + dt / 1.6);
+            const blend = moveBlend * moveBlend * (3 - 2 * moveBlend);
+            items.forEach((item, index) => {
+              const step = motion[index];
+              const dx = Math.sin(clock * step.sx + step.phase) * step.ax * blend;
+              let dy = Math.cos(clock * step.sy + step.phase * 1.3) * step.ay * blend;
+              const box = restBoxes?.[index];
+              if (box) {
+                const roomBelow = window.innerHeight - screenMargin - box.bottom;
+                const roomAbove = box.top - screenMargin;
+                const maxDy = roomBelow <= 0 ? 0 : roomBelow;
+                const minDy = roomAbove <= 0 ? 0 : -roomAbove;
+                dy = Math.min(maxDy, Math.max(minDy, dy));
+              }
+              item.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            });
+          }
+          draw();
+          requestAnimationFrame(tick);
+        };
+
+        requestAnimationFrame(tick);
+
+        const show = (name: string) => intro.classList.add(name);
+
+        if (reduced) {
+          show("is-circles");
+          show("is-lines");
+          show("is-images");
+        } else {
+          window.setTimeout(() => show("is-circles"), 800);
+          window.setTimeout(() => {
+            show("is-lines");
+            lineStartedAt = performance.now();
+          }, 1800);
+        }
+      }
+    }
+  }
+</script>

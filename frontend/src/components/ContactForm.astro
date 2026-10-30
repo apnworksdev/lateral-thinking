@@ -1,0 +1,100 @@
+---
+interface Props {
+  title?: string;
+  sanity?: string;
+}
+
+const { title, sanity } = Astro.props;
+---
+
+<div class="us-form" data-us-form hidden>
+  <div class="us-form__panel">
+    <button type="button" class="us-form__back bull-5-mono bull-5-mono--sm" data-close-form>
+      [X] BACK
+    </button>
+    {title && <h2 class="us-form__title neu-haas-display" data-sanity={sanity}>{title}</h2>}
+    <form class="us-form__fields" data-contact-form>
+      <label class="us-form__field">
+        <span class="bull-5-mono bull-5-mono--sm">Name</span>
+        <input name="name" type="text" autocomplete="name" required />
+      </label>
+      <label class="us-form__field">
+        <span class="bull-5-mono bull-5-mono--sm">Company</span>
+        <input name="company" type="text" autocomplete="organization" />
+      </label>
+      <label class="us-form__field">
+        <span class="bull-5-mono bull-5-mono--sm">Email</span>
+        <input name="email" type="email" autocomplete="email" required />
+      </label>
+      <label class="us-form__field">
+        <span class="bull-5-mono bull-5-mono--sm">What are you looking for?</span>
+        <input name="lookingFor" type="text" />
+      </label>
+      <label class="us-form__field">
+        <span class="bull-5-mono bull-5-mono--sm">Where is it happening?</span>
+        <input name="where" type="text" />
+      </label>
+      <label class="us-form__field">
+        <span class="bull-5-mono bull-5-mono--sm">Tell us about your project</span>
+        <textarea name="project" rows="5" required></textarea>
+      </label>
+      <button type="submit" class="us-form__back bull-5-mono bull-5-mono--lg">[ Send ]</button>
+      <p class="us-form__status bull-5-mono bull-5-mono--lg" data-form-status hidden></p>
+    </form>
+  </div>
+</div>
+
+<script>
+  const panel = document.querySelector("[data-us-form]");
+  const form = document.querySelector("[data-contact-form]");
+  const status = document.querySelector("[data-form-status]");
+
+  const open = () => {
+    if (!(panel instanceof HTMLElement)) return;
+    panel.hidden = false;
+    panel.scrollIntoView({ block: "start" });
+    panel.querySelector("input")?.focus();
+  };
+
+  const close = () => {
+    if (!(panel instanceof HTMLElement)) return;
+    panel.hidden = true;
+  };
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (target.closest("[data-open-form]")) {
+      event.preventDefault();
+      open();
+    }
+    if (target.closest("[data-close-form]")) close();
+  });
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") close();
+  });
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!(form instanceof HTMLFormElement) || !(status instanceof HTMLElement)) return;
+
+    const data = Object.fromEntries(new FormData(form));
+    status.hidden = false;
+    status.textContent = "Sending…";
+
+    const response = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (response.ok) {
+      form.reset();
+      status.textContent = "Thanks. We'll be in touch.";
+      return;
+    }
+
+    status.textContent = "Something went wrong. Try again.";
+  });
+</script>

@@ -1,0 +1,111 @@
+import {CaseIcon} from '@sanity/icons'
+import {defineArrayMember, defineField, defineType} from 'sanity'
+
+/**
+ * Services singleton. A gallery, one main text, then as many title-and-text
+ * blocks as needed. The document id is fixed to "servicesPage" in the Studio structure.
+ */
+
+const textWithLinks = defineArrayMember({
+  type: 'block',
+  styles: [{title: 'Normal', value: 'normal'}],
+  lists: [],
+  marks: {
+    decorators: [],
+    annotations: [
+      {
+        name: 'link',
+        type: 'object',
+        title: 'Enlace',
+        fields: [
+          defineField({
+            name: 'href',
+            type: 'url',
+            title: 'URL',
+            description:
+              'Un correo se abre en el mail. Puedes pegarlo tal cual: info@lateralthinking.barcelona',
+            validation: (rule) =>
+              rule.uri({
+                allowRelative: true,
+                scheme: ['http', 'https', 'mailto', 'tel'],
+              }),
+          }),
+        ],
+      },
+    ],
+  },
+})
+
+export default defineType({
+  name: 'servicesPage',
+  title: 'Servicios',
+  type: 'document',
+  icon: CaseIcon,
+  fields: [
+    defineField({
+      name: 'images',
+      title: 'Galería',
+      type: 'array',
+      options: {layout: 'grid'},
+      of: [
+        defineArrayMember({
+          type: 'image',
+          options: {hotspot: true},
+          fields: [
+            defineField({
+              name: 'alt',
+              title: 'Texto alternativo',
+              type: 'string',
+              description: 'Describe la imagen para quien no pueda verla.',
+              validation: (rule) => rule.required(),
+            }),
+          ],
+        }),
+      ],
+    }),
+    defineField({
+      name: 'lead',
+      title: 'Texto principal',
+      type: 'array',
+      of: [textWithLinks],
+    }),
+    defineField({
+      name: 'sections',
+      title: 'Apartados',
+      type: 'array',
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'serviceSection',
+          title: 'Apartado',
+          fields: [
+            defineField({
+              name: 'title',
+              title: 'Título',
+              type: 'string',
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: 'text',
+              title: 'Texto',
+              type: 'array',
+              of: [textWithLinks],
+              validation: (rule) => rule.required(),
+            }),
+          ],
+          preview: {
+            select: {title: 'title'},
+            prepare({title}) {
+              return {title: title || 'Apartado'}
+            },
+          },
+        }),
+      ],
+    }),
+  ],
+  preview: {
+    prepare() {
+      return {title: 'Servicios'}
+    },
+  },
+})

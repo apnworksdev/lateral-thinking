@@ -1,0 +1,30 @@
+---
+import Menu from "../components/Menu.astro";
+import UsPage from "../components/UsPage.astro";
+import Layout from "../layouts/Layout.astro";
+import { getUsPage } from "../utils/sanity";
+import "../styles/pages/us.css";
+
+const page = await getUsPage();
+---
+
+<Layout title="Us" fullBleed>
+  <Menu />
+  {
+    page ? (
+      <UsPage page={page} />
+    ) : (
+      <p class="us-empty">Publica Us en el Studio para verla aquí.</p>
+    )
+  }
+</Layout>
+
+<style is:global>
+  html {
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+  }
+</style>

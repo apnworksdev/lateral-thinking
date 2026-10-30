@@ -1,0 +1,91 @@
+---
+import Menu from "../../components/Menu.astro";
+import Layout from "../../layouts/Layout.astro";
+import { urlFor } from "../../utils/image";
+import { getProject } from "../../utils/sanity";
+import { vimeoPlayerUrl } from "../../utils/vimeo";
+import "../../styles/pages/work.css";
+
+const { slug } = Astro.params;
+const project = slug ? await getProject(slug) : null;
+
+if (!project) {
+  return Astro.rewrite("/404");
+}
+
+const files = (project.files ?? []).flatMap((file) => {
+  if (file.source === "image" && file.image?.asset) {
+    return [
+      {
+        key: file._key,
+        source: "image" as const,
+        alt: file.alt || "",
+        src: urlFor(file.image).width(1600).auto("format").quality(80).url(),
+      },
+    ];
+  }
+  if (file.source === "file" && file.videoUrl) {
+    return [{ key: file._key, source: "file" as const, src: file.videoUrl }];
+  }
+  if (file.source === "vimeo") {
+    const src = vimeoPlayerUrl(file.vimeoUrl, false);
+    if (src) return [{ key: file._key, source: "vimeo" as const, src }];
+  }
+  return [];
+});
+---
+
+<Layout title={project.title || "Work"} description={project.description} fullBleed>
+  <Menu />
+  <article class="project">
+    <header class="project__header">
+      {project.title && <h1 class="project__title neu-haas-display">{project.title}</h1>}
+      {
+        project.categories && project.categories.length > 0 && (
+          <p class="project__categories bull-5-mono">
+            {project.categories.map((category) => category.title).filter(Boolean).join("  ")}
+          </p>
+        )
+      }
+      {project.client && <p class="project__client bull-5-mono">{project.client}</p>}
+      {project.description && <p class="project__description">{project.description}</p>}
+      {
+        project.longDescription && project.longDescription.length > 0 && (
+          <div class="project__long">
+            {project.longDescription.map((paragraph) => (
+              <p>{paragraph.text}</p>
+            ))}
+          </div>
+        )
+      }
+    </header>
+    {
+      files.length > 0 && (
+        <ul class="project__gallery">
+          {files.map((file) => (
+            <li>
+              {file.source === "image" && <img src={file.src} alt={file.alt} />}
+              {file.source === "file" && (
+                <video src={file.src} controls playsinline />
+              )}
+              {file.source === "vimeo" && (
+                <iframe src={file.src} title="Vídeo" allow="autoplay; fullscreen; picture-in-picture" />
+              )}
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    {
+      project.extras && project.extras.length > 0 && (
+        <div class="project__extras">
+          {project.extras.map((extra) => (
+            <section>
+              {extra.text && <p>{extra.text}</p>}
+            </section>
+          ))}
+        </div>
+      )
+    }
+  </article>
+</Layout>

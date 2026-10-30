@@ -1,0 +1,102 @@
+---
+import { PortableText } from "astro-portabletext";
+import { createDataAttribute } from "@sanity/visual-editing-csm";
+import HeadlineText from "./HeadlineText.astro";
+import TextLink from "./TextLink.astro";
+import { urlFor } from "../utils/image";
+import type { HomePage } from "../utils/sanity";
+import { vimeoPlayerUrl } from "../utils/vimeo";
+
+interface Props {
+  home: HomePage;
+}
+
+const { home } = Astro.props;
+
+const visualEditingEnabled =
+  import.meta.env.PUBLIC_SANITY_VISUAL_EDITING_ENABLED === "true";
+
+const dataAttr = visualEditingEnabled
+  ? createDataAttribute({
+      projectId: import.meta.env.PUBLIC_SANITY_STUDIO_PROJECT_ID,
+      dataset: import.meta.env.PUBLIC_SANITY_STUDIO_DATASET,
+      baseUrl: import.meta.env.PUBLIC_SANITY_STUDIO_URL || "http://localhost:3333",
+      id: home._id,
+      type: home._type,
+    })
+  : null;
+
+const imageUrl = home.image?.asset
+  ? urlFor(home.image).width(2000).height(1200).fit("crop").auto("format").quality(80).url()
+  : undefined;
+const mobileImageUrl = home.mobileImage?.asset
+  ? urlFor(home.mobileImage).width(900).height(1600).fit("crop").auto("format").quality(80).url()
+  : undefined;
+const vimeoSrc = home.backgroundType === "vimeo" ? vimeoPlayerUrl(home.vimeoUrl) : undefined;
+---
+
+<section class="home">
+  {
+    home.backgroundType === "image" && imageUrl && (
+      <img
+        class:list={["home__media", mobileImageUrl && "home__media--desktop"]}
+        src={imageUrl}
+        alt={home.image?.alt || ""}
+        data-sanity={dataAttr?.scope("image").toString()}
+      />
+    )
+  }
+  {
+    home.backgroundType === "image" && mobileImageUrl && (
+      <img
+        class="home__media home__media--mobile"
+        src={mobileImageUrl}
+        alt={home.mobileImage?.alt || home.image?.alt || ""}
+        data-sanity={dataAttr?.scope("mobileImage").toString()}
+      />
+    )
+  }
+  {
+    home.backgroundType === "file" && home.videoUrl && (
+      <video
+        class="home__media"
+        src={home.videoUrl}
+        autoplay
+        muted
+        loop
+        playsinline
+        data-sanity={dataAttr?.scope("videoFile").toString()}
+      />
+    )
+  }
+  {
+    home.backgroundType === "vimeo" && vimeoSrc && (
+      <iframe
+        class="home__vimeo"
+        src={vimeoSrc}
+        title="Vídeo de fondo"
+        allow="autoplay; fullscreen"
+        data-sanity={dataAttr?.scope("vimeoUrl").toString()}
+      />
+    )
+  }
+
+  <div class="home__veil"></div>
+
+  <div class="home__content">
+    {
+      home.headline && (
+        <h1 class="home__headline neu-haas-display" data-sanity={dataAttr?.scope("headline").toString()}>
+          {Array.isArray(home.headline) ? (
+            <PortableText
+              value={home.headline}
+              components={{ block: { normal: HeadlineText }, mark: { link: TextLink } }}
+            />
+          ) : (
+            <span>{home.headline}</span>
+          )}
+        </h1>
+      )
+    }
+  </div>
+</section>

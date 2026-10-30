@@ -1,0 +1,84 @@
+---
+import Menu from "../../components/Menu.astro";
+import Layout from "../../layouts/Layout.astro";
+import { urlFor } from "../../utils/image";
+import { getProjects } from "../../utils/sanity";
+import "../../styles/pages/work.css";
+
+const projects = await getProjects();
+const categories = [
+  ...new Map(
+    projects
+      .flatMap((project) => project.categories ?? [])
+      .filter((category) => category.slug && category.title)
+      .map((category) => [category.slug, category]),
+  ).values(),
+];
+---
+
+<Layout title="Work" fullBleed>
+  <Menu />
+  <section class="work">
+    {
+      categories.length > 0 && (
+        <div class="work__filters bull-5-mono" role="group" aria-label="Categorías">
+          <button type="button" data-filter="all" aria-pressed="true">
+            All
+          </button>
+          {categories.map((category) => (
+            <button type="button" data-filter={category.slug} aria-pressed="false">
+              {category.title}
+            </button>
+          ))}
+        </div>
+      )
+    }
+    {
+      projects.length > 0 ? (
+        <ul class="work__list">
+          {projects.map((project) => {
+            const image = project.cover?.source === "image" ? project.cover.image : undefined;
+            const slugs = (project.categories ?? [])
+              .map((category) => category.slug)
+              .filter(Boolean)
+              .join(" ");
+            return (
+              <li data-categories={slugs}>
+                <a href={`/work/${project.slug}`}>
+                  {image?.asset && (
+                    <img
+                      src={urlFor(image).width(800).auto("format").quality(80).url()}
+                      alt={project.cover?.alt || ""}
+                    />
+                  )}
+                  <span class="work__title neu-haas-display">{project.title}</span>
+                  {project.client && <span class="work__client bull-5-mono">{project.client}</span>}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p class="work__empty">Publica un proyecto en el Studio para verlo aquí.</p>
+      )
+    }
+  </section>
+</Layout>
+
+<script>
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>("[data-filter]")];
+  const items = [...document.querySelectorAll<HTMLElement>("[data-categories]")];
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const filter = button.dataset.filter;
+      buttons.forEach((item) => {
+        item.setAttribute("aria-pressed", String(item === button));
+      });
+      items.forEach((item) => {
+        const categories = item.dataset.categories?.split(" ").filter(Boolean) ?? [];
+        item.hidden = filter !== "all" && !categories.includes(filter ?? "");
+      });
+    });
+  });
+</script>

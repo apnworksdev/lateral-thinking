@@ -1,0 +1,62 @@
+---
+import Banner from "./Banner.astro";
+import "../styles/navigation.css";
+
+const year = new Date().getFullYear();
+const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
+
+const toneByPath: Record<string, "white" | "grey" | "black"> = {
+  "/us": "grey",
+  "/services": "grey",
+  "/work": "grey",
+  "/archive": "black",
+};
+
+const tone = currentPath.startsWith("/work")
+  ? "grey"
+  : (toneByPath[currentPath] ?? "white");
+
+const items = [
+  { href: "/contact", label: "Contact" },
+  { href: "/us", label: "Us" },
+  { href: "/services", label: "Services" },
+  { href: "/archive", label: "Archive" },
+  { href: "/work", label: "Work" },
+  { href: "/", label: "Home" },
+];
+---
+
+<Banner tone={tone} />
+<nav class="menu bull-5-mono" data-tone={tone} aria-label="Menu">
+  <div class="menu__intro">
+    <a class="menu__mark" href="/" aria-label="Lateral"></a>
+    <p class="menu__copy">© {year}</p>
+  </div>
+  <div class="menu__nav">
+    <ul class="menu__list">
+      {
+        items.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              aria-current={
+                item.href === "/"
+                  ? currentPath === "/"
+                    ? "page"
+                    : undefined
+                  : currentPath === item.href || currentPath.startsWith(`${item.href}/`)
+                    ? "page"
+                    : undefined
+              }
+            >
+              <span class="menu__bracket">[</span>
+              {item.label}
+              <span class="menu__bracket">]</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <a class="menu__brand" href="/" aria-label="Lateral Thinking"></a>
+  </div>
+</nav>

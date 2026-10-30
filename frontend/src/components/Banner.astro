@@ -1,0 +1,38 @@
+---
+import { createDataAttribute } from "@sanity/visual-editing-csm";
+import { getHomePage } from "../utils/sanity";
+
+interface Props {
+  tone: "white" | "grey" | "black";
+}
+
+const { tone } = Astro.props;
+const home = await getHomePage();
+
+const visualEditingEnabled =
+  import.meta.env.PUBLIC_SANITY_VISUAL_EDITING_ENABLED === "true";
+
+const dataAttr =
+  visualEditingEnabled && home
+    ? createDataAttribute({
+        projectId: import.meta.env.PUBLIC_SANITY_STUDIO_PROJECT_ID,
+        dataset: import.meta.env.PUBLIC_SANITY_STUDIO_DATASET,
+        baseUrl: import.meta.env.PUBLIC_SANITY_STUDIO_URL || "http://localhost:3333",
+        id: home._id,
+        type: home._type,
+      })
+    : null;
+---
+
+{
+  (home?.secondaryText || home?.highlight) && (
+    <aside class="banner bull-5-mono" data-tone={tone}>
+      {home.secondaryText && (
+        <p data-sanity={dataAttr?.scope("secondaryText").toString()}>{home.secondaryText}</p>
+      )}
+      {home.highlight && (
+        <p data-sanity={dataAttr?.scope("highlight").toString()}>{home.highlight}</p>
+      )}
+    </aside>
+  )
+}

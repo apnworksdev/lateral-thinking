@@ -1,0 +1,19 @@
+@font-face {
+  font-family: "Neue Haas Display";
+  src:
+    url("/fonts/NeueHaasDisplay-Bold.woff2") format("woff2"),
+    url("/fonts/NeueHaasDisplay-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Bull 5 Mono";
+  src:
+    url("/fonts/Bull-5-Mono.woff2") format("woff2"),
+    url("/fonts/Bull-5-Mono.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

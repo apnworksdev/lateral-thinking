@@ -1,0 +1,20 @@
+---
+import HomePage from "../components/HomePage.astro";
+import Menu from "../components/Menu.astro";
+import Layout from "../layouts/Layout.astro";
+import { getHomePage } from "../utils/sanity";
+import "../styles/pages/index.css";
+
+const home = await getHomePage();
+---
+
+<Layout title="Lateral Thinking" description={home?.secondaryText} fullBleed>
+  <Menu />
+  {
+    home ? (
+      <HomePage home={home} />
+    ) : (
+      <p class="home-empty">Publica la Homepage en el Studio para verla aquí.</p>
+    )
+  }
+</Layout>
