@@ -52,6 +52,42 @@
   text-decoration: none;
 }
 
+.home__headline.is-typing {
+  position: relative;
+  color: transparent;
+}
+
+.home__headline.is-typing > span {
+  color: transparent;
+  background-color: transparent;
+}
+
+.home__headline .home__type {
+  color: var(--color-white);
+}
+
+.home__headline.is-typing .home__type span {
+  background-color: transparent;
+  color: inherit;
+}
+
+.home__headline.is-typing .home__ink.is-on {
+  background-color: var(--color-grey-dark);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  color: var(--color-white);
+}
+
+@media (scripting: none) {
+  .home__headline.is-typing {
+    color: var(--color-white);
+  }
+
+  .home__headline.is-typing > span {
+    background-color: var(--color-grey-dark);
+  }
+}
+
 .home__secondary,
 .home__highlight {
   font-size: 20px;

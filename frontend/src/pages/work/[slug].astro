@@ -8,6 +8,8 @@ import { urlFor } from "../../utils/image";
 import { getProject } from "../../utils/sanity";
 import { vimeoPlayerUrl } from "../../utils/vimeo";
 import "../../styles/pages/work.css";
+// El título del proyecto comparte el recorrido con la lista de Work.
+// El hover de los filtros se incrusta con esta página.
 
 const components = { mark: { link: TextLink } };
 
@@ -39,6 +41,7 @@ const files = (project.files ?? []).flatMap((file) => {
         source: "image" as const,
         alt: file.alt || "",
         src: urlFor(file.image).width(1600).auto("format").quality(80).url(),
+        full: urlFor(file.image).width(2800).auto("format").quality(85).url(),
       },
     ];
   }
@@ -58,23 +61,26 @@ const files = (project.files ?? []).flatMap((file) => {
   <article class="project">
     <header class="project__header">
       {(project.title || project.client) && (
-        <h1 class="project__title neu-haas-display">{project.client && <><span class="work__bracket">[</span>{project.client}]{" "}</>}{project.title}</h1>
+        <h1 class="project__title neu-haas-display neu-haas-display--lg">{project.client && <><span class="work__bracket">[</span>{project.client}<span class="work__bracket">]</span>{" "}</>}{project.title}</h1>
       )}
       {
-        project.description && project.description.length > 0 && (
-          <div class="project__copy">
-            <PortableText value={project.description} components={components} />
-          </div>
-        )
-      }
-      {
-        project.extras && project.extras.length > 0 && (
-          <div class="project__extras">
-            {project.extras.map((extra) => (
-              <section class="project__copy">
-                {extra.text && <PortableText value={extra.text} components={components} />}
-              </section>
-            ))}
+        ((project.description && project.description.length > 0) ||
+          (project.extras && project.extras.length > 0)) && (
+          <div class="project__intro neu-haas-display font-neu-haas-size-xss">
+            {project.description && project.description.length > 0 && (
+              <div class="project__copy">
+                <PortableText value={project.description} components={components} />
+              </div>
+            )}
+            {project.extras && project.extras.length > 0 && (
+              <div class="project__extras uppercase">
+                {project.extras.map((extra) => (
+                  <section class="project__copy">
+                    {extra.text && <PortableText value={extra.text} components={components} />}
+                  </section>
+                ))}
+              </div>
+            )}
           </div>
         )
       }
@@ -95,11 +101,139 @@ const files = (project.files ?? []).flatMap((file) => {
       )
     }
     {
+      files.length > 0 && (
+        <div class="project__viewer" hidden>
+          <button type="button" class="us-form__back bull-5-mono bull-5-mono--sm" data-project-back>
+            [X] BACK
+          </button>
+          <ul class="project__viewer-track">
+            {files.map((file) => (
+              <li>
+                {file.source === "image" && <img src={file.full} alt={file.alt} />}
+                {file.source === "file" && <video src={file.src} controls playsinline />}
+                {file.source === "vimeo" && (
+                  <iframe src={file.src} title="Vídeo" allow="autoplay; fullscreen; picture-in-picture" />
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+    {
       project.longDescription && project.longDescription.length > 0 && (
-        <div class="project__copy project__long">
+        <div class="project__copy project__long uppercase bull-5-mono bull-5-mono--sm">
           <PortableText value={project.longDescription} components={components} />
         </div>
       )
     }
   </article>
 </Layout>
+
+<script>
+  function sizeGallery() {
+    const gallery = document.querySelector<HTMLElement>(".project__gallery");
+    if (!gallery) return;
+    const header = document.querySelector<HTMLElement>(".project__header");
+    const copy = document.querySelector<HTMLElement>(".project__copy:not(.project__long)");
+    const longCopy = document.querySelector<HTMLElement>(".project__copy.project__long");
+    let before = header?.offsetHeight ?? 0;
+    if (copy && !header?.contains(copy)) before += copy.offsetHeight;
+    before += longCopy?.offsetHeight ?? 0;
+    gallery.style.setProperty("--project-before", `${before}px`);
+  }
+
+  function revealProject() {
+    const project = document.querySelector(".project.project--hold");
+    if (!(project instanceof HTMLElement) || project.dataset.reveal === "1") return;
+    project.dataset.reveal = "1";
+
+    const show = () => {
+      project.classList.remove("project--hold");
+      sizeGallery();
+    };
+
+    window.setTimeout(show, 1700);
+  }
+
+  function whenProject() {
+    if (!document.querySelector(".project")) return;
+    sizeGallery();
+    document.fonts?.ready.then(sizeGallery);
+    revealProject();
+  }
+
+  function closeViewer(viewer: HTMLElement) {
+    viewer.hidden = true;
+    document.documentElement.classList.remove("project-viewer-open");
+    viewer.querySelectorAll("video").forEach((video) => video.pause());
+  }
+
+  function scrollStep(track: HTMLElement, direction: number) {
+    const items = [...track.children].filter((item): item is HTMLElement => item instanceof HTMLElement);
+    const current = track.scrollLeft;
+    const positions = items.map(
+      (item) => item.getBoundingClientRect().left - track.getBoundingClientRect().left + current,
+    );
+    const target =
+      direction > 0
+        ? positions.find((pos) => pos > current + 4)
+        : [...positions].reverse().find((pos) => pos < current - 4);
+    if (target == null) return;
+    track.scrollTo({ left: target, behavior: "auto" });
+  }
+
+  function bindViewer() {
+    const gallery = document.querySelector(".project__gallery");
+    const viewer = document.querySelector(".project__viewer");
+    if (!(gallery instanceof HTMLElement) || !(viewer instanceof HTMLElement)) return;
+    if (gallery.dataset.viewer === "1") return;
+    gallery.dataset.viewer = "1";
+    const track = viewer.querySelector(".project__viewer-track");
+
+    gallery.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLImageElement)) return;
+      const item = target.closest("li");
+      if (!(item instanceof HTMLElement) || !(track instanceof HTMLElement)) return;
+      const index = [...gallery.children].indexOf(item);
+      viewer.hidden = false;
+      document.documentElement.classList.add("project-viewer-open");
+      const go = () => track.scrollTo({ left: index * track.clientWidth, behavior: "auto" });
+      go();
+      window.requestAnimationFrame(go);
+    });
+
+    viewer.querySelector("[data-project-back]")?.addEventListener("click", () => closeViewer(viewer));
+  }
+
+  if (document.documentElement.dataset.projectViewer !== "true") {
+    document.documentElement.dataset.projectViewer = "true";
+    document.addEventListener("keydown", (event) => {
+      const viewer = document.querySelector(".project__viewer");
+      if (event.key === "Escape") {
+        if (viewer instanceof HTMLElement && !viewer.hidden) closeViewer(viewer);
+        return;
+      }
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      const typing = event.target;
+      if (typing instanceof HTMLElement && (typing.isContentEditable || typing.closest("input, textarea"))) return;
+      const direction = event.key === "ArrowRight" ? 1 : -1;
+      const track =
+        viewer instanceof HTMLElement && !viewer.hidden
+          ? viewer.querySelector(".project__viewer-track")
+          : document.querySelector(".project__gallery");
+      if (!(track instanceof HTMLElement)) return;
+      event.preventDefault();
+      scrollStep(track, direction);
+    });
+  }
+
+  whenProject();
+  bindViewer();
+  document.addEventListener("astro:page-load", () => {
+    whenProject();
+    bindViewer();
+  });
+  window.addEventListener("resize", sizeGallery);
+</script>

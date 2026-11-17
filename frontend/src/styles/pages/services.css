@@ -21,7 +21,7 @@
   margin: 0 0 12px;
 }
 
-.services__lead p:last-child {
+.services__lead p:last-of-type {
   margin-bottom: 0;
 }
 
@@ -50,7 +50,7 @@
   margin: 0 0 12px;
 }
 
-.services__text p:last-child {
+.services__text p:last-of-type {
   margin-bottom: 0;
 }
 

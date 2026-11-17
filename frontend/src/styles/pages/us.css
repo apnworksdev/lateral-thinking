@@ -101,11 +101,51 @@
   text-transform: uppercase;
 }
 
+.us__title.is-typing,
+.us__text.is-typing,
+.us-form__title.is-typing,
+.services__lead.is-typing,
+.services__title.is-typing,
+.services__text.is-typing {
+  position: relative;
+  color: transparent;
+}
+
+.us__text.is-typing > :not(.home__type),
+.services__lead.is-typing > :not(.home__type),
+.services__text.is-typing > :not(.home__type) {
+  color: transparent;
+}
+
+.us__title.is-typing .home__ink.is-on,
+.us__text.is-typing .home__ink.is-on,
+.us-form__title.is-typing .home__ink.is-on,
+.services__lead.is-typing .home__ink.is-on,
+.services__title.is-typing .home__ink.is-on,
+.services__text.is-typing .home__ink.is-on {
+  color: #000;
+  background: none;
+}
+
+@media (scripting: none) {
+  .us__title.is-typing,
+  .us__text.is-typing,
+  .us-form__title.is-typing,
+  .services__lead.is-typing,
+  .services__title.is-typing,
+  .services__text.is-typing,
+  .us__text.is-typing > :not(.home__type),
+  .services__lead.is-typing > :not(.home__type),
+  .services__text.is-typing > :not(.home__type) {
+    color: #000;
+  }
+}
+
 .us__text p {
   margin: 0 0 12px;
 }
 
-.us__text p:last-child {
+.us__text p:last-of-type {
   margin-bottom: 0;
 }
 

@@ -96,9 +96,9 @@ const images = (page.images ?? []).flatMap((image) => {
       <div class="us__sections" data-sanity={dataAttr?.scope("sections").toString()}>
         {page.sections.map((section) => (
           <article class="us__section">
-            {section.title && <h2 class="us__title bull-5-mono">{section.title}</h2>}
+            {section.title && <h2 class="us__title is-typing bull-5-mono">{section.title}</h2>}
             {section.text && (
-              <div class="us__text neu-haas-display">
+              <div class="us__text is-typing neu-haas-display">
                 <PortableText
                   value={section.text}
                   components={{
@@ -116,3 +116,9 @@ const images = (page.images ?? []).flatMap((image) => {
   }
   <Constellation />
 </section>
+
+<script>
+  import { bindTypewriterSequence } from "../scripts/typewriter";
+
+  bindTypewriterSequence(".us__title, .us__text");
+</script>

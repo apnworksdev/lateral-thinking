@@ -73,6 +73,17 @@
 
 .menu__list a {
   color: inherit;
+  transition: color 0.3s ease;
+}
+
+.menu__list a:hover,
+.menu__list a:hover .menu__bracket {
+  color: #000;
+}
+
+.menu[data-tone="white"] .menu__list a:hover,
+.menu[data-tone="white"] .menu__list a:hover .menu__bracket {
+  color: var(--menu-muted);
 }
 
 .menu__list a[aria-current="page"] {

@@ -12,6 +12,7 @@
   --color-black: #101112;
   --color-gray-200: #ced2d9;
   --color-gray-600: #6e7683;
+  --color-gray-text: #7F7F7F;
   --color-blue-600: #1e61cd;
   --color-magenta-100: #f9d7eb;
 }
@@ -35,6 +36,11 @@
     calc(18px * var(--font-min)),
     calc(18 / 1920 * 100vw),
     calc(18px * var(--font-max))
+  );
+  --font-neu-haas-size-xss: clamp(
+    calc(16px * var(--font-min)),
+    calc(16 / 1920 * 100vw),
+    calc(16px * var(--font-max))
   );
   --font-neu-haas-line: 1;
   --font-bull-size: clamp(
@@ -76,6 +82,10 @@ body {
   font-size: var(--font-neu-haas-size-sm);
 }
 
+.font-neu-haas-size-xss {
+  font-size: var(--font-neu-haas-size-xss);
+}
+
 .uppercase {
   text-transform: uppercase;
 }
@@ -88,4 +98,26 @@ body {
 
 .bull-5-mono--sm {
   font-size: var(--font-bull-size-sm);
+}
+
+.home__type {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  padding: inherit;
+  pointer-events: none;
+}
+
+.home__caret {
+  position: absolute;
+  width: 0;
+  height: 0.85em;
+  box-shadow: 0.08em 0 0 currentColor;
+  animation: home-caret 0.8s steps(1) infinite;
+}
+
+@keyframes home-caret {
+  50% {
+    box-shadow: 0.08em 0 0 transparent;
+  }
 }

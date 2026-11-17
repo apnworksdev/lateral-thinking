@@ -3,6 +3,8 @@ import Menu from "../../components/Menu.astro";
 import Layout from "../../layouts/Layout.astro";
 import { getProjects } from "../../utils/sanity";
 import "../../styles/pages/work.css";
+// El título de la lista comparte tamaño y color con la página del proyecto.
+// El hover de los filtros se incrusta con esta página.
 
 const projects = await getProjects();
 const listed = Array.from({ length: 4 }, () => projects).flat();
@@ -49,10 +51,7 @@ const categories = [
             return (
               <li data-categories={slugs}>
                 <a href={`/work/${project.slug}`}>
-                  <span class="work__title neu-haas-display--lg">
-                    {project.client && <><span class="work__bracket">[</span>{`${project.client}] `}</>}
-                    {project.title}
-                  </span>
+                  <span class="work__title  neu-haas-display neu-haas-display--lg">{project.client && <><span class="work__bracket">[</span>{project.client}<span class="work__bracket">]</span>{" "}</>}{project.title}</span>
                 </a>
               </li>
             );
@@ -66,19 +65,90 @@ const categories = [
 </Layout>
 
 <script>
-  const buttons = [...document.querySelectorAll<HTMLButtonElement>("[data-filter]")];
-  const items = [...document.querySelectorAll<HTMLElement>("[data-categories]")];
+  import { navigate } from "astro:transitions/client";
 
-  buttons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const filter = button.dataset.filter;
-      buttons.forEach((item) => {
-        item.setAttribute("aria-pressed", String(item === button));
-      });
-      items.forEach((item) => {
-        const categories = item.dataset.categories?.split(" ").filter(Boolean) ?? [];
-        item.hidden = filter !== "all" && !categories.includes(filter ?? "");
+  const titleName = "work-title";
+
+  function clearTitles(root: ParentNode) {
+    root.querySelectorAll(".work__title").forEach((item) => {
+      if (item instanceof HTMLElement) item.style.viewTransitionName = "none";
+    });
+  }
+
+  function wait(ms: number) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+  }
+
+  async function depart(link: HTMLAnchorElement) {
+    if (link.dataset.leaving === "true") return;
+    link.dataset.leaving = "true";
+    document.documentElement.dataset.projectHold = "1";
+    link.closest("li")?.classList.add("is-chosen");
+    await wait(700);
+    link.closest(".work__list")?.classList.add("is-departing");
+    await wait(800);
+    clearTitles(document);
+    const title = link.querySelector(".work__title");
+    if (title instanceof HTMLElement) title.style.viewTransitionName = titleName;
+    await navigate(link.href);
+  }
+
+  if (document.documentElement.dataset.workTitleMove !== "true") {
+    document.documentElement.dataset.workTitleMove = "true";
+
+    document.addEventListener(
+      "click",
+      (event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        const link = target.closest(".work__list a");
+        if (!(link instanceof HTMLAnchorElement)) return;
+        event.preventDefault();
+        void depart(link);
+      },
+      true,
+    );
+
+    document.addEventListener("astro:before-swap", (event) => {
+      const next = (event as Event & { newDocument?: Document }).newDocument;
+      if (!next) return;
+      const path = window.location.pathname.replace(/\/$/, "");
+      const link = next.querySelector(`.work__list a[href="${path}"], .work__list a[href="${path}/"]`);
+      const title = link?.querySelector(".work__title");
+      if (title instanceof HTMLElement) {
+        clearTitles(next);
+        title.style.viewTransitionName = titleName;
+      }
+      if (document.documentElement.dataset.projectHold === "1") {
+        document.documentElement.dataset.projectHold = "";
+        next.querySelector(".project")?.classList.add("project--hold");
+      }
+    });
+  }
+
+  function initWorkList() {
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>(".work__filters [data-filter]")];
+    if (!buttons.length || buttons[0].dataset.bound === "true") return;
+    buttons.forEach((button) => {
+      button.dataset.bound = "true";
+    });
+    const items = [...document.querySelectorAll<HTMLElement>(".work__list [data-categories]")];
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const filter = button.dataset.filter;
+        buttons.forEach((item) => {
+          item.setAttribute("aria-pressed", String(item === button));
+        });
+        items.forEach((item) => {
+          const categories = item.dataset.categories?.split(" ").filter(Boolean) ?? [];
+          item.hidden = filter !== "all" && !categories.includes(filter ?? "");
+        });
       });
     });
-  });
+  }
+
+  initWorkList();
+  document.addEventListener("astro:page-load", initWorkList);
 </script>

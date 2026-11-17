@@ -45,56 +45,72 @@ const { title, sanity } = Astro.props;
 </div>
 
 <script>
-  const panel = document.querySelector("[data-us-form]");
-  const form = document.querySelector("[data-contact-form]");
-  const status = document.querySelector("[data-form-status]");
+  import { playTypewriter } from "../scripts/typewriter";
 
   const open = () => {
+    const panel = document.querySelector("[data-us-form]");
     if (!(panel instanceof HTMLElement)) return;
     panel.hidden = false;
     panel.scrollIntoView({ block: "start" });
+    const title = panel.querySelector(".us-form__title");
+    if (title instanceof HTMLElement) playTypewriter(title);
     panel.querySelector("input")?.focus();
   };
 
   const close = () => {
+    const panel = document.querySelector("[data-us-form]");
     if (!(panel instanceof HTMLElement)) return;
     panel.hidden = true;
   };
 
-  document.addEventListener("click", (event) => {
-    const target = event.target;
-    if (!(target instanceof Element)) return;
-    if (target.closest("[data-open-form]")) {
-      event.preventDefault();
-      open();
-    }
-    if (target.closest("[data-close-form]")) close();
-  });
+  if (document.documentElement.dataset.contactForm !== "true") {
+    document.documentElement.dataset.contactForm = "true";
 
-  window.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") close();
-  });
-
-  form?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (!(form instanceof HTMLFormElement) || !(status instanceof HTMLElement)) return;
-
-    const data = Object.fromEntries(new FormData(form));
-    status.hidden = false;
-    status.textContent = "Sending…";
-
-    const response = await fetch("/api/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest("[data-open-form]")) {
+        event.preventDefault();
+        open();
+      }
+      if (target.closest("[data-close-form]")) close();
     });
 
-    if (response.ok) {
-      form.reset();
-      status.textContent = "Thanks. We'll be in touch.";
-      return;
-    }
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") close();
+    });
+  }
 
-    status.textContent = "Something went wrong. Try again.";
-  });
+  function bindContactForm() {
+    const form = document.querySelector("[data-contact-form]");
+    const status = document.querySelector("[data-form-status]");
+    if (!(form instanceof HTMLFormElement) || form.dataset.bound === "true") return;
+    form.dataset.bound = "true";
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!(status instanceof HTMLElement)) return;
+
+      const data = Object.fromEntries(new FormData(form));
+      status.hidden = false;
+      status.textContent = "Sending…";
+
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        form.reset();
+        status.textContent = "Thanks. We'll be in touch.";
+        return;
+      }
+
+      status.textContent = "Something went wrong. Try again.";
+    });
+  }
+
+  bindContactForm();
+  document.addEventListener("astro:page-load", bindContactForm);
 </script>

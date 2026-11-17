@@ -1,6 +1,7 @@
 ---
 import Banner from "./Banner.astro";
 import "../styles/navigation.css";
+// El hover del menú vive en esta hoja para que sobreviva a la navegación.
 
 const year = new Date().getFullYear();
 const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";

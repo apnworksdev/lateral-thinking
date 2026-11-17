@@ -4,6 +4,7 @@ import Layout from "../layouts/Layout.astro";
 import { urlFor } from "../utils/image";
 import { getArchiveProjects } from "../utils/sanity";
 import "../styles/pages/archive.css";
+// El hover de los filtros se incrusta con esta página.
 
 const projects = await getArchiveProjects();
 const listed = Array.from({ length: 10 }, () => projects).flat();
@@ -103,8 +104,17 @@ function formatDate(value?: string) {
 </Layout>
 
 <script>
-  const buttons = [...document.querySelectorAll<HTMLButtonElement>("[data-filter]")];
-  const items = [...document.querySelectorAll<HTMLElement>("[data-categories]")];
+  import { typewriteText } from "../scripts/typewriter";
+
+  let resizeArchive = () => {};
+
+  function initArchive() {
+    const root = document.querySelector(".archive");
+    if (!(root instanceof HTMLElement) || root.dataset.ready === "true") return;
+    root.dataset.ready = "true";
+
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>(".archive__filters [data-filter]")];
+    const items = [...document.querySelectorAll<HTMLElement>(".archive [data-categories]")];
 
   buttons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -147,11 +157,11 @@ function formatDate(value?: string) {
   }
 
   markClipped();
-  sizeHits();
-  window.addEventListener("resize", () => {
-    markClipped();
     sizeHits();
-  });
+    resizeArchive = () => {
+      markClipped();
+      sizeHits();
+    };
 
   function sizeHits() {
     document.querySelectorAll<HTMLElement>(".archive__line").forEach((line) => {
@@ -212,5 +222,59 @@ function formatDate(value?: string) {
         if (activeImage === image) activeImage = null;
       });
     });
-  });
+    });
+
+    bindArchiveType();
+  }
+
+  function bindArchiveType() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    document.querySelectorAll<HTMLElement>(".archive__line").forEach((line) => {
+      if (line.dataset.typed === "bound") return;
+      line.dataset.typed = "bound";
+      let run = 0;
+      let active = false;
+      let typing: AbortController | null = null;
+
+      const copies = () =>
+        [...line.querySelectorAll<HTMLElement>(".archive__field-copy:not([aria-hidden='true'])")];
+
+      const stop = () => {
+        run += 1;
+        active = false;
+        typing?.abort();
+        typing = null;
+        line.querySelectorAll(".home__type").forEach((layer) => layer.remove());
+        line.querySelectorAll(".is-typing").forEach((node) => node.classList.remove("is-typing"));
+      };
+
+      const start = () => {
+        if (active) return;
+        const nodes = copies();
+        if (!nodes.length) return;
+        active = true;
+        const token = ++run;
+        typing = new AbortController();
+        const signal = typing.signal;
+        nodes.forEach((node) => node.classList.add("is-typing"));
+        void Promise.all(nodes.map((node) => typewriteText(node, signal))).then(() => {
+          if (token === run) typing = null;
+        });
+      };
+
+      line.querySelectorAll(".archive__field, .archive__hit").forEach((field) => {
+        field.addEventListener("pointerenter", start);
+        field.addEventListener("pointerleave", (event) => {
+          const next = (event.relatedTarget as Element | null)?.closest?.(".archive__line");
+          if (next === line) return;
+          stop();
+        });
+      });
+    });
+  }
+
+  initArchive();
+  document.addEventListener("astro:page-load", initArchive);
+  window.addEventListener("resize", () => resizeArchive());
 </script>

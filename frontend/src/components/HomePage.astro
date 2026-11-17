@@ -86,7 +86,7 @@ const vimeoSrc = home.backgroundType === "vimeo" ? vimeoPlayerUrl(home.vimeoUrl)
   <div class="home__content">
     {
       home.headline && (
-        <h1 class="home__headline neu-haas-display" data-sanity={dataAttr?.scope("headline").toString()}>
+        <h1 class="home__headline is-typing neu-haas-display" data-sanity={dataAttr?.scope("headline").toString()}>
           {Array.isArray(home.headline) ? (
             <PortableText
               value={home.headline}
@@ -100,3 +100,9 @@ const vimeoSrc = home.backgroundType === "vimeo" ? vimeoPlayerUrl(home.vimeoUrl)
     }
   </div>
 </section>
+
+<script>
+  import { bindTypewriter } from "../scripts/typewriter";
+
+  bindTypewriter(".home__headline");
+</script>

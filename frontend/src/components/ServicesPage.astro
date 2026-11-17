@@ -94,7 +94,7 @@ const linkComponents = { block: { normal: UsParagraph }, mark: { link: TextLink 
   <div class="services__sections">
     {
       page.lead && page.lead.length > 0 && (
-        <div class="services__lead neu-haas-display" data-sanity={dataAttr?.scope("lead").toString()}>
+        <div class="services__lead is-typing neu-haas-display" data-sanity={dataAttr?.scope("lead").toString()}>
           <PortableText value={page.lead} components={linkComponents} />
         </div>
       )
@@ -102,9 +102,9 @@ const linkComponents = { block: { normal: UsParagraph }, mark: { link: TextLink 
     {
       page.sections?.map((section) => (
         <article class="services__section" data-sanity={dataAttr?.scope("sections").toString()}>
-          {section.title && <h2 class="services__title neu-haas-display">{section.title}</h2>}
+          {section.title && <h2 class="services__title is-typing neu-haas-display">{section.title}</h2>}
           {section.text && (
-            <div class="services__text bull-5-mono bull-5-mono--sm">
+            <div class="services__text is-typing bull-5-mono bull-5-mono--sm">
               <PortableText value={section.text} components={linkComponents} />
             </div>
           )}
@@ -114,3 +114,9 @@ const linkComponents = { block: { normal: UsParagraph }, mark: { link: TextLink 
   </div>
   <Constellation />
 </section>
+
+<script>
+  import { bindTypewriterSequence } from "../scripts/typewriter";
+
+  bindTypewriterSequence(".services__lead, .services__title, .services__text");
+</script>

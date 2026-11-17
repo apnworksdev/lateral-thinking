@@ -1,4 +1,5 @@
 <script>
+  function initConstellation() {
   const scenes = document.querySelectorAll("[data-us-scene]");
 
   scenes.forEach((scene) => {
@@ -137,4 +138,8 @@
     requestAnimationFrame(tick);
     if (reduced) window.addEventListener("resize", draw);
   });
+  }
+
+  initConstellation();
+  document.addEventListener("astro:page-load", initConstellation);
 </script>

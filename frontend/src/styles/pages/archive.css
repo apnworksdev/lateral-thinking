@@ -44,6 +44,7 @@ html:has(.archive) {
 
 .archive__filters button {
   cursor: pointer;
+  transition: color 0.3s ease;
 }
 
 .archive__filters-bracket {
@@ -57,6 +58,11 @@ html:has(.archive) {
 .archive__filters button[aria-pressed="true"] .archive__filters-bracket {
   visibility: visible;
   color: #cecece;
+}
+
+.archive__filters button:hover,
+.archive__filters button:hover .archive__filters-bracket {
+  color: #000;
 }
 
 .archive__field {
@@ -149,14 +155,12 @@ html:has(.archive) {
   cursor: pointer;
 }
 
-.archive__line:hover,
-.archive__line:hover .archive__bracket {
+.archive__line:hover {
   color: #dfdfdf;
 }
 
 .archive__bracket {
-  color: #000;
-  transition: color 0.3s ease;
+  color: inherit;
 }
 
 .archive__hover {
@@ -170,6 +174,33 @@ html:has(.archive) {
 
 .archive__item:has(.archive__line:hover) .archive__hover {
   display: block;
+}
+
+.archive__field-copy.is-typing {
+  position: relative;
+  color: transparent;
+}
+
+.archive__field-copy.is-typing .home__type {
+  line-height: normal;
+}
+
+.archive__line .archive__field-copy.is-typing .archive__bracket {
+  color: transparent;
+  transition: none;
+}
+
+.archive__field-copy.is-typing .home__ink.is-on,
+.archive__field-copy.is-typing .home__caret {
+  color: #dfdfdf;
+}
+
+.archive__line:hover .is-clipped .archive__field-text:has(.is-typing) {
+  animation: none;
+}
+
+.archive__line:hover .is-clipped .archive__field-text:has(.is-typing) .archive__field-copy + .archive__field-copy {
+  display: none;
 }
 
 .archive__empty {
