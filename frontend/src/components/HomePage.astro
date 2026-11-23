@@ -11,9 +11,11 @@ interface Props {
   home: HomePage;
   /** Si se pasa, el typewriter del headline solo corre una vez por sesión. */
   typewriterSessionKey?: string;
+  /** Homepage (/): oculta el banner lateral. */
+  landing?: boolean;
 }
 
-const { home, typewriterSessionKey } = Astro.props;
+const { home, typewriterSessionKey, landing = false } = Astro.props;
 
 const visualEditingEnabled =
   import.meta.env.PUBLIC_SANITY_VISUAL_EDITING_ENABLED === "true";
@@ -37,7 +39,31 @@ const mobileImageUrl = home.mobileImage?.asset
 const vimeoSrc = home.backgroundType === "vimeo" ? vimeoPlayerUrl(home.vimeoUrl) : undefined;
 ---
 
-<section class="home" data-typewriter-session={typewriterSessionKey}>
+<section class:list={["home", landing && "home--landing"]} data-typewriter-session={typewriterSessionKey}>
+  <style is:inline>
+    .home__headline.is-typing,
+    .home__secondary.is-typing,
+    .home__highlight.is-typing {
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
+    }
+    .home__secondary.is-typing,
+    .home__highlight.is-typing {
+      background: none !important;
+      background-color: transparent !important;
+    }
+    .home__headline.is-typing > :not(.home__type),
+    .home__secondary.is-typing > :not(.home__type),
+    .home__highlight.is-typing > :not(.home__type) {
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
+      background: none !important;
+    }
+    .home__meta.is-pending {
+      opacity: 0 !important;
+      visibility: hidden !important;
+    }
+  </style>
   {
     typewriterSessionKey && (
       <script is:inline>
@@ -48,8 +74,13 @@ const vimeoSrc = home.backgroundType === "vimeo" ? vimeoPlayerUrl(home.vimeoUrl)
           if (!key) return;
           try {
             if (sessionStorage.getItem("lt-typewriter-" + key) === "1") {
-              root.querySelectorAll(".home__headline.is-typing").forEach(function (el) {
-                el.classList.remove("is-typing");
+              root
+                .querySelectorAll(".home__headline.is-typing, .home__secondary.is-typing, .home__highlight.is-typing")
+                .forEach(function (el) {
+                  el.classList.remove("is-typing");
+                });
+              root.querySelectorAll(".home__meta.is-pending").forEach(function (el) {
+                el.classList.remove("is-pending");
               });
             }
           } catch (e) {}
@@ -121,14 +152,14 @@ const vimeoSrc = home.backgroundType === "vimeo" ? vimeoPlayerUrl(home.vimeoUrl)
     }
     {
       (home.secondaryText || home.highlight) && (
-        <div class="home__meta bull-5-mono">
+        <div class="home__meta bull-5-mono is-pending">
           {home.secondaryText && (
-            <p class="home__secondary" data-sanity={dataAttr?.scope("secondaryText").toString()}>
+            <p class="home__secondary is-typing" data-sanity={dataAttr?.scope("secondaryText").toString()}>
               {home.secondaryText}
             </p>
           )}
           {home.highlight && (
-            <p class="home__highlight" data-sanity={dataAttr?.scope("highlight").toString()}>
+            <p class="home__highlight is-typing" data-sanity={dataAttr?.scope("highlight").toString()}>
               {home.highlight}
             </p>
           )}
@@ -139,7 +170,9 @@ const vimeoSrc = home.backgroundType === "vimeo" ? vimeoPlayerUrl(home.vimeoUrl)
 </section>
 
 <script>
-  import { bindTypewriter } from "../scripts/typewriter";
+  import { bindTypewriterSequence } from "../scripts/typewriter";
 
-  bindTypewriter(".home__headline");
+  bindTypewriterSequence(".home__headline, .home__secondary, .home__highlight", {
+    oncePerSession: true,
+  });
 </script>

@@ -130,5 +130,8 @@ const linkComponents = { block: { normal: UsParagraph }, mark: { link: TextLink 
 <script>
   import { bindTypewriterSequence } from "../scripts/typewriter";
 
-  bindTypewriterSequence(".services__lead, .services__title, .services__text", { desktopOnly: true });
+  bindTypewriterSequence(".services__lead, .services__title, .services__text", {
+    desktopOnly: true,
+    skipOnClick: true,
+  });
 </script>

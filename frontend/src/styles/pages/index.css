@@ -3,6 +3,10 @@ html:has(.home) {
   overscroll-behavior: none;
 }
 
+html:has(.home--landing) .banner {
+  display: none;
+}
+
 .home {
   height: 100dvh;
   overflow: hidden;
@@ -46,6 +50,12 @@ html:has(.home) {
   text-transform: uppercase;
 }
 
+.home__meta.is-pending {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .home__headline {
   color: var(--color-white);
   padding-right: 50px;
@@ -62,30 +72,33 @@ html:has(.home) {
   text-decoration: none;
 }
 
-.home__headline.is-typing {
-  position: relative;
-  color: transparent;
-}
-
-.home__headline.is-typing > span {
-  color: transparent;
-  background-color: transparent;
-}
-
-.home__headline .home__type {
+.home__headline .home__type,
+.home__secondary .home__type,
+.home__highlight .home__type {
   color: var(--color-white);
+  -webkit-text-fill-color: var(--color-white);
 }
 
 .home__headline.is-typing .home__type span {
   background-color: transparent;
   color: inherit;
+  -webkit-text-fill-color: inherit;
 }
 
-.home__headline.is-typing .home__ink.is-on {
+/* El gris del meta solo crece con el ink tipado, no la barra entera. */
+.home__secondary.is-typing,
+.home__highlight.is-typing {
+  background-color: transparent;
+}
+
+.home__headline.is-typing .home__ink.is-on,
+.home__secondary.is-typing .home__ink.is-on,
+.home__highlight.is-typing .home__ink.is-on {
   background-color: var(--color-grey-dark);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
   color: var(--color-white);
+  -webkit-text-fill-color: var(--color-white);
 }
 
 @media (scripting: none) {
@@ -96,10 +109,17 @@ html:has(.home) {
   .home__headline.is-typing > span {
     background-color: var(--color-grey-dark);
   }
+
+  .home__secondary.is-typing,
+  .home__highlight.is-typing {
+    color: var(--color-white);
+    background-color: var(--color-grey-dark);
+  }
 }
 
 .home__secondary,
 .home__highlight {
+  margin: 0;
   font-size: 20px;
   background-color: var(--color-grey-dark);
 }

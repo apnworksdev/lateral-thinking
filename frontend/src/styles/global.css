@@ -127,12 +127,33 @@ aside.banner.bull-5-mono,
   font-size: var(--font-bull-size);
 }
 
+.is-typing {
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Mantiene el layout (centrado) pero no se ve ni se selecciona el original. */
+.is-typing > :not(.home__type) {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  background: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
 .home__type {
   position: absolute;
   inset: 0;
   box-sizing: border-box;
   padding: inherit;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .home__caret {

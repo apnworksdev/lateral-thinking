@@ -178,6 +178,11 @@
   color: inherit;
   font: inherit;
   text-decoration: underline;
+  transition: text-decoration 0.3s ease;
+}
+
+.us-form-open:hover {
+  text-decoration: none;
 }
 
 .us-form-open {

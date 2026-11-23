@@ -61,8 +61,10 @@ function typewrite(target: HTMLElement, signal?: AbortSignal) {
       return;
     }
     target.classList.add("is-typing");
+    // El original se deja intacto (da el tamaño/centrado); solo se oculta con CSS.
     const source = textNodes(target);
-    const total = source.reduce((sum, node) => sum + (node.textContent?.length ?? 0), 0);
+    const sourceTexts = source.map((node) => node.textContent ?? "");
+    const total = sourceTexts.reduce((sum, text) => sum + text.length, 0);
     if (!total) {
       target.classList.remove("is-typing");
       finish();
@@ -72,7 +74,6 @@ function typewrite(target: HTMLElement, signal?: AbortSignal) {
     layer.className = "home__type";
     layer.setAttribute("aria-hidden", "true");
     layer.innerHTML = target.innerHTML;
-    target.appendChild(layer);
     const typed = textNodes(layer);
     typed.forEach((node) => {
       const ink = document.createElement("span");
@@ -81,6 +82,7 @@ function typewrite(target: HTMLElement, signal?: AbortSignal) {
       ink.appendChild(node);
       node.textContent = "";
     });
+    target.appendChild(layer);
 
     let count = 0;
     timer = window.setInterval(() => {
@@ -106,7 +108,7 @@ function typewrite(target: HTMLElement, signal?: AbortSignal) {
       count += 1;
       let left = count;
       typed.forEach((node, index) => {
-        const full = source[index]?.textContent ?? "";
+        const full = sourceTexts[index] ?? "";
         const take = Math.min(full.length, Math.max(0, left));
         const next = full.slice(0, take);
         if (node.textContent !== next) node.textContent = next;
@@ -138,6 +140,8 @@ async function typewriteSequence(nodes: HTMLElement[], signal?: AbortSignal) {
       releaseTypewriter(node);
       continue;
     }
+    // Meta solo se revela cuando le toca (tras el headline), no al arrancar la secuencia.
+    node.closest(".home__meta")?.classList.remove("is-pending");
     await typewrite(node, signal);
   }
 }
@@ -254,10 +258,14 @@ function listenSequence(key: string, run: () => void) {
   });
 }
 
-export function bindTypewriterSequence(selector: string, options?: { desktopOnly?: boolean }) {
+export function bindTypewriterSequence(
+  selector: string,
+  options?: { desktopOnly?: boolean; oncePerSession?: boolean; skipOnClick?: boolean },
+) {
   const key = `sequence:${selector}`;
   let controller: AbortController | null = null;
   let cancelWait = () => {};
+  let skipHandler: ((event: Event) => void) | null = null;
 
   const nodesOf = () =>
     [...document.querySelectorAll(selector)].filter((node): node is HTMLElement => node instanceof HTMLElement);
@@ -265,9 +273,45 @@ export function bindTypewriterSequence(selector: string, options?: { desktopOnly
   const desktopOnlyFor = (nodes: HTMLElement[]) =>
     options?.desktopOnly === true || nodes.some((node) => desktopOnlyTarget(node));
 
+  const clearSkip = () => {
+    if (!skipHandler) return;
+    document.removeEventListener("click", skipHandler, true);
+    skipHandler = null;
+  };
+
+  const revealAll = (nodes: HTMLElement[]) => {
+    nodes.forEach((node) => {
+      if (!node.isConnected) return;
+      releaseTypewriter(node);
+      node.dataset.typewriter = "1";
+      node.closest(".home__meta")?.classList.remove("is-pending");
+    });
+  };
+
+  const armSkip = (nodes: HTMLElement[], sessionKey: string | null) => {
+    clearSkip();
+    if (!options?.skipOnClick) return;
+    skipHandler = (event: Event) => {
+      const target = event.target;
+      if (
+        target instanceof Element &&
+        target.closest("a, button, input, textarea, label, select, [data-open-form]")
+      ) {
+        return;
+      }
+      clearSkip();
+      controller?.abort();
+      controller = null;
+      revealAll(nodes);
+      if (sessionKey) markSessionTypewriter(sessionKey);
+    };
+    document.addEventListener("click", skipHandler, true);
+  };
+
   const stop = (nodes: HTMLElement[]) => {
     cancelWait();
     cancelWait = () => {};
+    clearSkip();
     controller?.abort();
     controller = null;
     nodes.forEach((node) => {
@@ -279,16 +323,24 @@ export function bindTypewriterSequence(selector: string, options?: { desktopOnly
   const run = () => {
     const nodes = nodesOf();
     if (!nodes.length) return;
+    const pending = nodes.filter((node) => node.dataset.typewriter !== "1");
+    const sessionKey = options?.oncePerSession ? sessionTypewriterKey(nodes[0]) : null;
+    // Si esta montura ya arrancó, no volver a revealAll por un segundo astro:page-load
+    // (antes marcábamos sesión al inicio y el 2º run mataba la secuencia del meta).
+    if (sessionKey && sessionTypewriterSeen(sessionKey)) {
+      if (!pending.length) return;
+      revealAll(nodes);
+      return;
+    }
     const desktopOnly = desktopOnlyFor(nodes);
     if (desktopOnly && mobileViewport()) {
       stop(nodes);
       return;
     }
-    const pending = nodes.filter((node) => node.dataset.typewriter !== "1");
     if (!pending.length) return;
     pending.forEach((node) => {
       node.dataset.typewriter = "1";
-      if (desktopOnlyTarget(node)) node.classList.add("is-typing");
+      node.classList.add("is-typing");
     });
     cancelWait();
     cancelWait = whenVisible(() => {
@@ -299,8 +351,14 @@ export function bindTypewriterSequence(selector: string, options?: { desktopOnly
         return;
       }
       controller?.abort();
-      controller = new AbortController();
-      void typewriteSequence(current, controller.signal);
+      const active = new AbortController();
+      controller = active;
+      armSkip(current, sessionKey);
+      void typewriteSequence(current, active.signal)
+        .then(() => {
+          if (!active.signal.aborted && sessionKey) markSessionTypewriter(sessionKey);
+        })
+        .finally(clearSkip);
     }, pending);
   };
 
