@@ -156,6 +156,13 @@ aside.banner.bull-5-mono,
   -webkit-user-select: none;
 }
 
+/* El tipado pinta con color; sin esto hereda -webkit-text-fill-color: transparent de .is-typing. */
+.is-typing .home__type,
+.is-typing .home__ink,
+.is-typing .home__caret {
+  -webkit-text-fill-color: currentColor;
+}
+
 .home__caret {
   position: absolute;
   width: 0;

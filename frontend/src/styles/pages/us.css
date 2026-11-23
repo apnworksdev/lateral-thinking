@@ -117,6 +117,13 @@
   color: transparent;
 }
 
+/* Gana al -webkit-text-fill-color: transparent de .is-typing (si no, el tipado no se ve). */
+.us__title .home__type,
+.us__text .home__type,
+.us-form__title .home__type,
+.services__lead .home__type,
+.services__title .home__type,
+.services__text .home__type,
 .us__title.is-typing .home__ink.is-on,
 .us__text.is-typing .home__ink.is-on,
 .us-form__title.is-typing .home__ink.is-on,
@@ -124,6 +131,7 @@
 .services__title.is-typing .home__ink.is-on,
 .services__text.is-typing .home__ink.is-on {
   color: #000;
+  -webkit-text-fill-color: #000;
   background: none;
 }
 

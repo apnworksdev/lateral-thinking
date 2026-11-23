@@ -182,16 +182,20 @@ html:has(.archive) {
 
 .archive__field-copy.is-typing .home__type {
   line-height: normal;
+  color: #dfdfdf;
+  -webkit-text-fill-color: #dfdfdf;
 }
 
 .archive__line .archive__field-copy.is-typing .archive__bracket {
   color: transparent;
+  -webkit-text-fill-color: transparent;
   transition: none;
 }
 
 .archive__field-copy.is-typing .home__ink.is-on,
 .archive__field-copy.is-typing .home__caret {
   color: #dfdfdf;
+  -webkit-text-fill-color: #dfdfdf;
 }
 
 .archive__line:hover .is-clipped .archive__field-text:has(.is-typing) {
