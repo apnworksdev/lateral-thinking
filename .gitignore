@@ -20,8 +20,10 @@ yarn-error.log*
 .env.*
 !.env.example
 
-# vercel
+# vercel / netlify build output
 .vercel
+.netlify
+frontend/.netlify
 
 # typescript
 *.tsbuildinfo

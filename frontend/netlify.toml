@@ -1,0 +1,11 @@
+# Package directory de Netlify = frontend (UI).
+# Base directory vacío → install/build desde la raíz del monorepo.
+# Astro escribe Functions en frontend/.netlify (las descubre el package directory).
+[build]
+  command = "npm --workspace app run build"
+  publish = "frontend/dist"
+
+[build.environment]
+  # PUBLIC_* se embebe a propósito en el cliente; el escáner no debe fallar por eso.
+  # No omitir SANITY_API_READ_TOKEN.
+  SECRETS_SCAN_OMIT_KEYS = "PUBLIC_SANITY_STUDIO_DATASET,PUBLIC_SANITY_STUDIO_PROJECT_ID,PUBLIC_SANITY_STUDIO_URL,PUBLIC_SANITY_VISUAL_EDITING_ENABLED"
