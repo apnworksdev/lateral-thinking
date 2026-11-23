@@ -79,6 +79,15 @@ const categories = [
     return new Promise((resolve) => window.setTimeout(resolve, ms));
   }
 
+  function mobileWork() {
+    return window.matchMedia("(max-width: 1023px)").matches;
+  }
+
+  /** Ancho útil del título en ficha móvil (padding 38 + 45). */
+  function projectTitleWidth() {
+    return "calc(100vw - 83px)";
+  }
+
   async function depart(link: HTMLAnchorElement) {
     if (link.dataset.leaving === "true") return;
     link.dataset.leaving = "true";
@@ -89,7 +98,16 @@ const categories = [
     await wait(800);
     clearTitles(document);
     const title = link.querySelector(".work__title");
-    if (title instanceof HTMLElement) title.style.viewTransitionName = titleName;
+    if (title instanceof HTMLElement) {
+      // Misma caja que la ficha para que el wrap no cambie al subir.
+      if (mobileWork()) {
+        title.style.boxSizing = "border-box";
+        title.style.width = projectTitleWidth();
+        title.style.maxWidth = projectTitleWidth();
+        title.style.paddingRight = "0";
+      }
+      title.style.viewTransitionName = titleName;
+    }
     await navigate(link.href);
   }
 
@@ -120,6 +138,24 @@ const categories = [
         clearTitles(next);
         title.style.viewTransitionName = titleName;
       }
+      const projectTitle = next.querySelector(".project__title");
+      if (projectTitle instanceof HTMLElement) {
+        projectTitle.style.cssText = "";
+        projectTitle.style.viewTransitionName = titleName;
+        projectTitle.style.whiteSpace = "normal";
+        projectTitle.style.overflowWrap = "break-word";
+        projectTitle.style.paddingRight = "0";
+        projectTitle.style.minWidth = "0";
+        if (mobileWork()) {
+          projectTitle.style.boxSizing = "border-box";
+          projectTitle.style.width = projectTitleWidth();
+          projectTitle.style.maxWidth = projectTitleWidth();
+        } else {
+          projectTitle.style.width = "auto";
+          projectTitle.style.maxWidth = "100%";
+        }
+      }
+      fitWorkTitles(next);
       if (document.documentElement.dataset.projectHold === "1") {
         document.documentElement.dataset.projectHold = "";
         next.querySelector(".project")?.classList.add("project--hold");
@@ -127,7 +163,19 @@ const categories = [
     });
   }
 
+  function fitWorkTitles(root: ParentNode = document) {
+    const max = mobileWork() ? "100%" : `calc((100vw - 140px) * 2 / 3)`;
+    root.querySelectorAll(".work__title").forEach((item) => {
+      if (!(item instanceof HTMLElement)) return;
+      item.style.width = mobileWork() ? "auto" : "fit-content";
+      item.style.maxWidth = max;
+      item.style.whiteSpace = "normal";
+      item.style.overflowWrap = "break-word";
+    });
+  }
+
   function initWorkList() {
+    fitWorkTitles();
     const buttons = [...document.querySelectorAll<HTMLButtonElement>(".work__filters [data-filter]")];
     if (!buttons.length || buttons[0].dataset.bound === "true") return;
     buttons.forEach((button) => {

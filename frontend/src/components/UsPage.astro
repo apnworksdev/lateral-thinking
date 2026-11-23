@@ -96,9 +96,13 @@ const images = (page.images ?? []).flatMap((image) => {
       <div class="us__sections" data-sanity={dataAttr?.scope("sections").toString()}>
         {page.sections.map((section) => (
           <article class="us__section">
-            {section.title && <h2 class="us__title is-typing bull-5-mono">{section.title}</h2>}
+            {section.title && (
+              <h2 class="us__title is-typing bull-5-mono" data-typewriter-desktop>
+                {section.title}
+              </h2>
+            )}
             {section.text && (
-              <div class="us__text is-typing neu-haas-display">
+              <div class="us__text is-typing neu-haas-display" data-typewriter-desktop>
                 <PortableText
                   value={section.text}
                   components={{
@@ -117,8 +121,16 @@ const images = (page.images ?? []).flatMap((image) => {
   <Constellation />
 </section>
 
+<script is:inline>
+  if (window.matchMedia("(max-width: 1023px)").matches) {
+    document.querySelectorAll("[data-typewriter-desktop]").forEach((node) => {
+      node.classList.remove("is-typing");
+      node.querySelector(".home__type")?.remove();
+    });
+  }
+</script>
 <script>
   import { bindTypewriterSequence } from "../scripts/typewriter";
 
-  bindTypewriterSequence(".us__title, .us__text");
+  bindTypewriterSequence(".us__title, .us__text", { desktopOnly: true });
 </script>

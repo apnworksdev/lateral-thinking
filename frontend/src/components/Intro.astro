@@ -136,6 +136,7 @@ const images = (page?.images ?? []).flatMap((image) => {
         let restBoxes: DOMRect[] | null = null;
         const lineDuration = 1800;
         const screenMargin = 48;
+        const mobileLayout = window.matchMedia("(max-width: 1023px)").matches;
 
         const fitToScreen = () => {
           items.forEach((item) => {
@@ -203,7 +204,7 @@ const images = (page?.images ?? []).flatMap((image) => {
               }, 1200);
             }
           }
-          if (!moving) fitToScreen();
+          if (!moving && !mobileLayout) fitToScreen();
           if (moving && !reduced) {
             if (!restBoxes) restBoxes = items.map((item) => item.getBoundingClientRect());
             const dt = Math.min(0.05, (now - last) / 1000);

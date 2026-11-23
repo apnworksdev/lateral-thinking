@@ -206,3 +206,69 @@ html:has(.archive) {
 .archive__empty {
   margin: 0;
 }
+
+@media (max-width: 1023px) {
+  .archive {
+    padding: 20px 55px 20px 35px;
+  }
+
+  .archive__filters{
+    right: 30px;
+    padding: 20px 0;
+  }
+
+  .archive__date-rest {
+    display: none;
+  }
+
+  .archive__services {
+    display: none;
+  }
+
+  .archive__line:hover {
+    color: inherit;
+  }
+
+  .archive__item.is-open .archive__line,
+  .archive__item.is-open .archive__line:hover {
+    color: #dfdfdf;
+  }
+
+  .archive__line {
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+  }
+
+  .archive__line .archive__field {
+    grid-column: span 2;
+  }
+
+  .archive__line .archive__field.archive__date {
+    grid-column: span 1;
+  }
+
+  .archive__line .archive__field.archive__title {
+    grid-column: span 4;
+  }
+
+  .archive__hover {
+    position: static;
+    width: 100%;
+    height: auto;
+    margin-top: 5px;
+  }
+
+  .archive__item:has(.archive__line:hover) .archive__hover {
+    display: none;
+  }
+
+  .archive__item.is-open .archive__hover,
+  .archive__item.is-open:has(.archive__line:hover) .archive__hover {
+    display: block;
+  }
+}
+
+@media (max-width: 1023px) {
+  .archive__item .archive__line {
+    font-size: 12px;
+  }
+}

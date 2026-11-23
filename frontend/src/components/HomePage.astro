@@ -9,9 +9,11 @@ import { vimeoPlayerUrl } from "../utils/vimeo";
 
 interface Props {
   home: HomePage;
+  /** Si se pasa, el typewriter del headline solo corre una vez por sesión. */
+  typewriterSessionKey?: string;
 }
 
-const { home } = Astro.props;
+const { home, typewriterSessionKey } = Astro.props;
 
 const visualEditingEnabled =
   import.meta.env.PUBLIC_SANITY_VISUAL_EDITING_ENABLED === "true";
@@ -35,7 +37,26 @@ const mobileImageUrl = home.mobileImage?.asset
 const vimeoSrc = home.backgroundType === "vimeo" ? vimeoPlayerUrl(home.vimeoUrl) : undefined;
 ---
 
-<section class="home">
+<section class="home" data-typewriter-session={typewriterSessionKey}>
+  {
+    typewriterSessionKey && (
+      <script is:inline>
+        (function () {
+          var root = document.currentScript && document.currentScript.parentElement;
+          if (!root) return;
+          var key = root.getAttribute("data-typewriter-session");
+          if (!key) return;
+          try {
+            if (sessionStorage.getItem("lt-typewriter-" + key) === "1") {
+              root.querySelectorAll(".home__headline.is-typing").forEach(function (el) {
+                el.classList.remove("is-typing");
+              });
+            }
+          } catch (e) {}
+        })();
+      </script>
+    )
+  }
   {
     home.backgroundType === "image" && imageUrl && (
       <img
@@ -96,6 +117,22 @@ const vimeoSrc = home.backgroundType === "vimeo" ? vimeoPlayerUrl(home.vimeoUrl)
             <span>{home.headline}</span>
           )}
         </h1>
+      )
+    }
+    {
+      (home.secondaryText || home.highlight) && (
+        <div class="home__meta bull-5-mono">
+          {home.secondaryText && (
+            <p class="home__secondary" data-sanity={dataAttr?.scope("secondaryText").toString()}>
+              {home.secondaryText}
+            </p>
+          )}
+          {home.highlight && (
+            <p class="home__highlight" data-sanity={dataAttr?.scope("highlight").toString()}>
+              {home.highlight}
+            </p>
+          )}
+        </div>
       )
     }
   </div>

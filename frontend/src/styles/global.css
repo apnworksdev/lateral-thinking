@@ -78,6 +78,24 @@ body {
   font-weight: 700;
 }
 
+/* Fuera de work.css: el ClientRouter cachea hojas de página y reaplica el nowrap viejo. */
+.work__list .work__title {
+  width: fit-content;
+  max-width: calc((100vw - 140px) * 2 / 3);
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1;
+}
+
+article.project h1.project__title {
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1;
+}
+
 .neu-haas-display--sm {
   font-size: var(--font-neu-haas-size-sm);
 }
@@ -100,6 +118,15 @@ body {
   font-size: var(--font-bull-size-sm);
 }
 
+/* Menú, banner y filtros: misma talla en todas las páginas.
+   Especificidad alta para ganar a un navigation.css cacheado con font-size: 12px. */
+nav.menu.bull-5-mono,
+aside.banner.bull-5-mono,
+.work__filters.bull-5-mono,
+.archive__filters.bull-5-mono {
+  font-size: var(--font-bull-size);
+}
+
 .home__type {
   position: absolute;
   inset: 0;
@@ -119,5 +146,70 @@ body {
 @keyframes home-caret {
   50% {
     box-shadow: 0.08em 0 0 transparent;
+  }
+}
+
+@media (max-width: 1023px) {
+  .neu-haas-display:not(.neu-haas-display--lg):not(.neu-haas-display--sm):not(.font-neu-haas-size-xss) {
+    font-size: 20px;
+  }
+
+  .neu-haas-display--lg {
+    font-size: 40px;
+  }
+
+  /* Misma talla; el ancho de caja lo iguala el JS en la VT (lista 72px vs ficha 45px). */
+  .work__list .work__title.neu-haas-display--lg,
+  .project .project__title.neu-haas-display--lg {
+    box-sizing: border-box;
+    width: auto;
+    max-width: 100%;
+    padding-right: 0 !important;
+    font-size: calc((100vw - 110px) / 7.1);
+    line-height: 1.1;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  .project__header {
+    padding-left: 38px !important;
+    padding-right: 45px !important;
+  }
+
+  .neu-haas-display--sm {
+    font-size: 16px;
+  }
+
+  .font-neu-haas-size-xss {
+    font-size: 14px;
+  }
+
+  .bull-5-mono {
+    font-size: 14px;
+  }
+
+  nav.menu.bull-5-mono,
+  aside.banner.bull-5-mono,
+  .work__filters.bull-5-mono,
+  .archive__filters.bull-5-mono {
+    font-size: 12px;
+  }
+
+  .bull-5-mono--sm {
+    font-size: 11px;
+  }
+
+  .work__list .work__title {
+    width: auto;
+    max-width: 100%;
+  }
+
+  [data-typewriter-desktop].is-typing,
+  [data-typewriter-desktop].is-typing > :not(.home__type) {
+    color: #000;
+  }
+
+  [data-typewriter-desktop] .home__type {
+    display: none;
   }
 }

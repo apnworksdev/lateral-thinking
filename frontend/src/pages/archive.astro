@@ -4,7 +4,7 @@ import Layout from "../layouts/Layout.astro";
 import { urlFor } from "../utils/image";
 import { getArchiveProjects } from "../utils/sanity";
 import "../styles/pages/archive.css";
-// El hover de los filtros se incrusta con esta página.
+// El hover, la posición, las columnas y los tamaños del archivo se incrustan con esta página.
 
 const projects = await getArchiveProjects();
 const listed = Array.from({ length: 10 }, () => projects).flat();
@@ -19,8 +19,8 @@ const categories = [
 
 function formatDate(value?: string) {
   const [year, month, day] = value?.slice(0, 10).split("-") ?? [];
-  if (!year || !month || !day) return "";
-  return `${day} ${month} ${year}`;
+  if (!year || !month || !day) return null;
+  return { day, month, year };
 }
 ---
 
@@ -67,7 +67,7 @@ function formatDate(value?: string) {
                   <span class="archive__hit" aria-hidden="true"></span>
                   {date && (
                     <div class="archive__field archive__date">
-                      <span class="archive__field-text">{date}</span>
+                      <span class="archive__field-text"><span class="archive__date-rest">{date.day} {date.month} </span>{date.year}</span>
                     </div>
                   )}
                   {project.location && (
@@ -107,6 +107,9 @@ function formatDate(value?: string) {
   import { typewriteText } from "../scripts/typewriter";
 
   let resizeArchive = () => {};
+
+  const mobileArchive = () => window.matchMedia("(max-width: 1023px)").matches;
+  const typewriters = new Map<HTMLElement, { start: () => void; stop: () => void }>();
 
   function initArchive() {
     const root = document.querySelector(".archive");
@@ -161,6 +164,13 @@ function formatDate(value?: string) {
     resizeArchive = () => {
       markClipped();
       sizeHits();
+      if (!mobileArchive()) return;
+      typewriters.forEach((typing) => typing.stop());
+      document.querySelectorAll<HTMLImageElement>(".archive__hover").forEach((image) => {
+        image.style.left = "";
+        image.style.top = "";
+        image.style.width = "";
+      });
     };
 
   function sizeHits() {
@@ -208,11 +218,24 @@ function formatDate(value?: string) {
 
   document.querySelectorAll<HTMLElement>(".archive__item").forEach((item) => {
     const image = item.querySelector<HTMLImageElement>(".archive__hover");
-    if (!image) return;
 
     item.querySelectorAll(".archive__field, .archive__hit").forEach((field) => {
+      field.addEventListener("click", () => {
+        if (!mobileArchive()) return;
+        const open = item.classList.contains("is-open");
+        document.querySelectorAll(".archive__item.is-open").forEach((other) => {
+          other.classList.remove("is-open");
+        });
+        if (image) {
+          image.style.left = "";
+          image.style.top = "";
+          image.style.width = "";
+        }
+        if (!open) item.classList.add("is-open");
+      });
+      if (!image) return;
       field.addEventListener("pointerenter", () => {
-        if (activeImage === image) return;
+        if (mobileArchive() || activeImage === image) return;
         activeImage = image;
         placeImage(image);
       });
@@ -250,7 +273,7 @@ function formatDate(value?: string) {
       };
 
       const start = () => {
-        if (active) return;
+        if (mobileArchive() || active) return;
         const nodes = copies();
         if (!nodes.length) return;
         active = true;
@@ -263,9 +286,15 @@ function formatDate(value?: string) {
         });
       };
 
+      typewriters.set(line, { start, stop });
+
       line.querySelectorAll(".archive__field, .archive__hit").forEach((field) => {
-        field.addEventListener("pointerenter", start);
+        field.addEventListener("pointerenter", () => {
+          if (mobileArchive()) return;
+          start();
+        });
         field.addEventListener("pointerleave", (event) => {
+          if (mobileArchive()) return;
           const next = (event.relatedTarget as Element | null)?.closest?.(".archive__line");
           if (next === line) return;
           stop();

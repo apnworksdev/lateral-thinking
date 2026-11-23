@@ -109,7 +109,7 @@ const files = (project.files ?? []).flatMap((file) => {
           <ul class="project__viewer-track">
             {files.map((file) => (
               <li>
-                {file.source === "image" && <img src={file.full} alt={file.alt} />}
+                {file.source === "image" && <img src={file.full} alt={file.alt} draggable="false" />}
                 {file.source === "file" && <video src={file.src} controls playsinline />}
                 {file.source === "vimeo" && (
                   <iframe src={file.src} title="Vídeo" allow="autoplay; fullscreen; picture-in-picture" />
@@ -166,7 +166,38 @@ const files = (project.files ?? []).flatMap((file) => {
   function closeViewer(viewer: HTMLElement) {
     viewer.hidden = true;
     document.documentElement.classList.remove("project-viewer-open");
+    const scrollY = Number(document.documentElement.dataset.viewerScroll || "0");
+    delete document.documentElement.dataset.viewerScroll;
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+    window.scrollTo(0, scrollY);
+    const host = document.querySelector(".project");
+    if (host instanceof HTMLElement && viewer.parentElement === document.body) {
+      host.appendChild(viewer);
+    }
     viewer.querySelectorAll("video").forEach((video) => video.pause());
+  }
+
+  function mobileProject() {
+    return window.matchMedia("(max-width: 1023px)").matches;
+  }
+
+  function openViewer(viewer: HTMLElement, track: HTMLElement, index: number) {
+    if (mobileProject()) return;
+    if (viewer.parentElement !== document.body) {
+      document.body.appendChild(viewer);
+    }
+    const scrollY = window.scrollY;
+    document.documentElement.dataset.viewerScroll = String(scrollY);
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+    viewer.hidden = false;
+    document.documentElement.classList.add("project-viewer-open");
+    const go = () => track.scrollTo({ left: index * track.clientWidth, behavior: "auto" });
+    go();
+    window.requestAnimationFrame(go);
   }
 
   function scrollStep(track: HTMLElement, direction: number) {
@@ -190,21 +221,47 @@ const files = (project.files ?? []).flatMap((file) => {
     if (gallery.dataset.viewer === "1") return;
     gallery.dataset.viewer = "1";
     const track = viewer.querySelector(".project__viewer-track");
+    if (!(track instanceof HTMLElement)) return;
 
     gallery.addEventListener("click", (event) => {
+      if (mobileProject()) return;
       const target = event.target;
       if (!(target instanceof HTMLImageElement)) return;
       const item = target.closest("li");
-      if (!(item instanceof HTMLElement) || !(track instanceof HTMLElement)) return;
+      if (!(item instanceof HTMLElement)) return;
       const index = [...gallery.children].indexOf(item);
-      viewer.hidden = false;
-      document.documentElement.classList.add("project-viewer-open");
-      const go = () => track.scrollTo({ left: index * track.clientWidth, behavior: "auto" });
-      go();
-      window.requestAnimationFrame(go);
+      openViewer(viewer, track, index);
+    });
+
+    window.matchMedia("(max-width: 1023px)").addEventListener("change", (event) => {
+      if (event.matches && !viewer.hidden) closeViewer(viewer);
     });
 
     viewer.querySelector("[data-project-back]")?.addEventListener("click", () => closeViewer(viewer));
+
+    const viewerNavTarget = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) return false;
+      if (target.closest("[data-project-back], video, iframe, a, button")) return false;
+      return true;
+    };
+
+    viewer.addEventListener("click", (event) => {
+      if (viewer.hidden || !viewerNavTarget(event.target)) return;
+      const direction = event.clientX < window.innerWidth / 2 ? -1 : 1;
+      scrollStep(track, direction);
+    });
+
+    viewer.addEventListener("mousemove", (event) => {
+      if (viewer.hidden || !viewerNavTarget(event.target)) {
+        viewer.style.cursor = "";
+        return;
+      }
+      viewer.style.cursor = event.clientX < window.innerWidth / 2 ? "w-resize" : "e-resize";
+    });
+
+    viewer.addEventListener("mouseleave", () => {
+      viewer.style.cursor = "";
+    });
   }
 
   if (document.documentElement.dataset.projectViewer !== "true") {
@@ -229,11 +286,41 @@ const files = (project.files ?? []).flatMap((file) => {
     });
   }
 
+  function releaseTitle() {
+    const title = document.querySelector(".project__title");
+    if (!(title instanceof HTMLElement)) return;
+    title.style.viewTransitionName = "none";
+    title.style.removeProperty("width");
+    title.style.removeProperty("max-width");
+    title.style.removeProperty("min-width");
+    title.style.removeProperty("padding-right");
+    title.style.removeProperty("box-sizing");
+    title.style.removeProperty("white-space");
+    title.style.removeProperty("overflow-wrap");
+  }
+
+  function settleProjectTitle() {
+    const title = document.querySelector(".project__title");
+    if (!(title instanceof HTMLElement)) return;
+    // Estado final = reload: sin inline de ancho (manda el CSS del header).
+    title.style.removeProperty("width");
+    title.style.removeProperty("max-width");
+    title.style.removeProperty("min-width");
+    title.style.removeProperty("padding-right");
+    title.style.removeProperty("box-sizing");
+    title.style.whiteSpace = "normal";
+    title.style.overflowWrap = "break-word";
+  }
+
   whenProject();
   bindViewer();
+  settleProjectTitle();
+  releaseTitle();
   document.addEventListener("astro:page-load", () => {
     whenProject();
     bindViewer();
+    settleProjectTitle();
+    window.setTimeout(releaseTitle, 1300);
   });
   window.addEventListener("resize", sizeGallery);
 </script>

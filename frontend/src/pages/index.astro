@@ -4,6 +4,7 @@ import Menu from "../components/Menu.astro";
 import Layout from "../layouts/Layout.astro";
 import { getHomePage } from "../utils/sanity";
 import "../styles/pages/index.css";
+// La home no hace scroll: el alto queda fijo a la ventana.
 
 const home = await getHomePage();
 ---
@@ -12,7 +13,7 @@ const home = await getHomePage();
   <Menu />
   {
     home ? (
-      <HomePage home={home} />
+      <HomePage home={home} typewriterSessionKey="home" />
     ) : (
       <p class="home-empty">Publica la Homepage en el Studio para verla aquí.</p>
     )

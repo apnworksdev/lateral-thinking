@@ -1,7 +1,5 @@
 ---
 import Banner from "./Banner.astro";
-import "../styles/navigation.css";
-// El hover del menú vive en esta hoja para que sobreviva a la navegación.
 
 const year = new Date().getFullYear();
 const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
@@ -50,14 +48,31 @@ const items = [
                     : undefined
               }
             >
-              <span class="menu__bracket">[</span>
-              {item.label}
-              <span class="menu__bracket">]</span>
+              <span class="menu__bracket" aria-hidden="true">[</span>{" "}{item.label}{" "}<span class="menu__bracket" aria-hidden="true">]</span>
             </a>
           </li>
         ))
       }
     </ul>
-    <a class="menu__brand" href="/" aria-label="Lateral Thinking"></a>
+    <a class="menu__brand" href="/" data-open-intro aria-label="Lateral Thinking"></a>
   </div>
 </nav>
+
+<script>
+  if (document.documentElement.dataset.menuIntro !== "true") {
+    document.documentElement.dataset.menuIntro = "true";
+    document.addEventListener(
+      "click",
+      (event) => {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        const link = target.closest("[data-open-intro]");
+        if (!(link instanceof HTMLAnchorElement)) return;
+        event.preventDefault();
+        document.cookie = "lt-intro=; Max-Age=0; Path=/; SameSite=Lax";
+        window.location.assign(link.href);
+      },
+      true,
+    );
+  }
+</script>

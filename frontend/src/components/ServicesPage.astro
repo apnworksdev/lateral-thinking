@@ -94,7 +94,7 @@ const linkComponents = { block: { normal: UsParagraph }, mark: { link: TextLink 
   <div class="services__sections">
     {
       page.lead && page.lead.length > 0 && (
-        <div class="services__lead is-typing neu-haas-display" data-sanity={dataAttr?.scope("lead").toString()}>
+        <div class="services__lead is-typing neu-haas-display" data-typewriter-desktop data-sanity={dataAttr?.scope("lead").toString()}>
           <PortableText value={page.lead} components={linkComponents} />
         </div>
       )
@@ -102,9 +102,13 @@ const linkComponents = { block: { normal: UsParagraph }, mark: { link: TextLink 
     {
       page.sections?.map((section) => (
         <article class="services__section" data-sanity={dataAttr?.scope("sections").toString()}>
-          {section.title && <h2 class="services__title is-typing neu-haas-display">{section.title}</h2>}
+          {section.title && (
+            <h2 class="services__title is-typing neu-haas-display" data-typewriter-desktop>
+              {section.title}
+            </h2>
+          )}
           {section.text && (
-            <div class="services__text is-typing bull-5-mono bull-5-mono--sm">
+            <div class="services__text is-typing bull-5-mono bull-5-mono--sm" data-typewriter-desktop>
               <PortableText value={section.text} components={linkComponents} />
             </div>
           )}
@@ -115,8 +119,16 @@ const linkComponents = { block: { normal: UsParagraph }, mark: { link: TextLink 
   <Constellation />
 </section>
 
+<script is:inline>
+  if (window.matchMedia("(max-width: 1023px)").matches) {
+    document.querySelectorAll("[data-typewriter-desktop]").forEach((node) => {
+      node.classList.remove("is-typing");
+      node.querySelector(".home__type")?.remove();
+    });
+  }
+</script>
 <script>
   import { bindTypewriterSequence } from "../scripts/typewriter";
 
-  bindTypewriterSequence(".services__lead, .services__title, .services__text");
+  bindTypewriterSequence(".services__lead, .services__title, .services__text", { desktopOnly: true });
 </script>

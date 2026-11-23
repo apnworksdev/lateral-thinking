@@ -1,5 +1,21 @@
 export const typeStep = 20;
 
+const mobileTypewriterQuery = "(max-width: 1023px)";
+
+function mobileViewport() {
+  return window.matchMedia(mobileTypewriterQuery).matches;
+}
+
+function desktopOnlyTarget(target: HTMLElement) {
+  return target.hasAttribute("data-typewriter-desktop");
+}
+
+function releaseTypewriter(target: HTMLElement) {
+  target.classList.remove("is-typing");
+  target.querySelector(".home__type")?.remove();
+  delete target.dataset.typing;
+}
+
 function textNodes(root: ParentNode) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const nodes: Text[] = [];
@@ -39,6 +55,12 @@ function typewrite(target: HTMLElement, signal?: AbortSignal) {
       finish();
       return;
     }
+    if (desktopOnlyTarget(target) && mobileViewport()) {
+      releaseTypewriter(target);
+      finish();
+      return;
+    }
+    target.classList.add("is-typing");
     const source = textNodes(target);
     const total = source.reduce((sum, node) => sum + (node.textContent?.length ?? 0), 0);
     if (!total) {
@@ -62,6 +84,11 @@ function typewrite(target: HTMLElement, signal?: AbortSignal) {
 
     let count = 0;
     timer = window.setInterval(() => {
+      if (desktopOnlyTarget(target) && mobileViewport()) {
+        releaseTypewriter(target);
+        abort();
+        return;
+      }
       if (signal?.aborted || !target.isConnected) {
         abort();
         return;
@@ -104,17 +131,21 @@ export function typewriteText(target: HTMLElement, signal?: AbortSignal) {
   return typewrite(target, signal);
 }
 
-async function typewriteSequence(nodes: HTMLElement[]) {
+async function typewriteSequence(nodes: HTMLElement[], signal?: AbortSignal) {
   for (const node of nodes) {
-    if (!node.isConnected) return;
-    await typewrite(node);
+    if (signal?.aborted || !node.isConnected) return;
+    if (desktopOnlyTarget(node) && mobileViewport()) {
+      releaseTypewriter(node);
+      continue;
+    }
+    await typewrite(node, signal);
   }
 }
 
 function whenVisible(start: () => void, nodes: HTMLElement[]) {
   if (!document.documentElement.classList.contains("intro-open")) {
     start();
-    return;
+    return () => {};
   }
   const observer = new MutationObserver(() => {
     if (nodes.some((node) => !node.isConnected)) {
@@ -127,11 +158,16 @@ function whenVisible(start: () => void, nodes: HTMLElement[]) {
     }
   });
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => observer.disconnect();
 }
 
 const bound = new Set<string>();
 
 export function playTypewriter(target: HTMLElement) {
+  if (desktopOnlyTarget(target) && mobileViewport()) {
+    releaseTypewriter(target);
+    return;
+  }
   if (target.dataset.typing === "1") return;
   target.dataset.typing = "1";
   target.classList.add("is-typing");
@@ -141,10 +177,41 @@ export function playTypewriter(target: HTMLElement) {
   });
 }
 
+function sessionTypewriterKey(node: HTMLElement) {
+  return (
+    node.dataset.typewriterSession ||
+    node.closest("[data-typewriter-session]")?.getAttribute("data-typewriter-session") ||
+    null
+  );
+}
+
+function sessionTypewriterSeen(key: string) {
+  try {
+    return sessionStorage.getItem(`lt-typewriter-${key}`) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markSessionTypewriter(key: string) {
+  try {
+    sessionStorage.setItem(`lt-typewriter-${key}`, "1");
+  } catch {
+    /* private mode */
+  }
+}
+
 export function bindTypewriter(selector: string) {
   const run = () => {
     document.querySelectorAll(selector).forEach((node) => {
       if (!(node instanceof HTMLElement) || node.dataset.typewriter === "1") return;
+      const sessionKey = sessionTypewriterKey(node);
+      if (sessionKey && sessionTypewriterSeen(sessionKey)) {
+        releaseTypewriter(node);
+        node.dataset.typewriter = "1";
+        return;
+      }
+      if (sessionKey) markSessionTypewriter(sessionKey);
       node.dataset.typewriter = "1";
       whenVisible(() => void typewrite(node), [node]);
     });
@@ -157,22 +224,86 @@ export function bindTypewriter(selector: string) {
   }
 }
 
-export function bindTypewriterSequence(selector: string) {
+type TypewriterStore = {
+  onLoad: Map<string, () => void>;
+  onMedia: Map<string, () => void>;
+  mediaBound: boolean;
+};
+
+function typewriterStore() {
+  const root = window as Window & { __ltTypewriter?: TypewriterStore };
+  root.__ltTypewriter ??= {
+    onLoad: new Map(),
+    onMedia: new Map(),
+    mediaBound: false,
+  };
+  return root.__ltTypewriter;
+}
+
+function listenSequence(key: string, run: () => void) {
+  const state = typewriterStore();
+  const previous = state.onLoad.get(key);
+  if (previous) document.removeEventListener("astro:page-load", previous);
+  state.onLoad.set(key, run);
+  document.addEventListener("astro:page-load", run);
+  state.onMedia.set(key, run);
+  if (state.mediaBound) return;
+  state.mediaBound = true;
+  window.matchMedia(mobileTypewriterQuery).addEventListener("change", () => {
+    typewriterStore().onMedia.forEach((fn) => fn());
+  });
+}
+
+export function bindTypewriterSequence(selector: string, options?: { desktopOnly?: boolean }) {
   const key = `sequence:${selector}`;
-  const run = () => {
-    const nodes = [...document.querySelectorAll(selector)].filter(
-      (node): node is HTMLElement => node instanceof HTMLElement && node.dataset.typewriter !== "1",
-    );
+  let controller: AbortController | null = null;
+  let cancelWait = () => {};
+
+  const nodesOf = () =>
+    [...document.querySelectorAll(selector)].filter((node): node is HTMLElement => node instanceof HTMLElement);
+
+  const desktopOnlyFor = (nodes: HTMLElement[]) =>
+    options?.desktopOnly === true || nodes.some((node) => desktopOnlyTarget(node));
+
+  const stop = (nodes: HTMLElement[]) => {
+    cancelWait();
+    cancelWait = () => {};
+    controller?.abort();
+    controller = null;
     nodes.forEach((node) => {
-      node.dataset.typewriter = "1";
+      releaseTypewriter(node);
+      delete node.dataset.typewriter;
     });
-    if (!nodes.length) return;
-    whenVisible(() => void typewriteSequence(nodes), nodes);
   };
 
+  const run = () => {
+    const nodes = nodesOf();
+    if (!nodes.length) return;
+    const desktopOnly = desktopOnlyFor(nodes);
+    if (desktopOnly && mobileViewport()) {
+      stop(nodes);
+      return;
+    }
+    const pending = nodes.filter((node) => node.dataset.typewriter !== "1");
+    if (!pending.length) return;
+    pending.forEach((node) => {
+      node.dataset.typewriter = "1";
+      if (desktopOnlyTarget(node)) node.classList.add("is-typing");
+    });
+    cancelWait();
+    cancelWait = whenVisible(() => {
+      const current = pending.filter((node) => node.isConnected);
+      if (!current.length) return;
+      if (desktopOnlyFor(current) && mobileViewport()) {
+        stop(current);
+        return;
+      }
+      controller?.abort();
+      controller = new AbortController();
+      void typewriteSequence(current, controller.signal);
+    }, pending);
+  };
+
+  listenSequence(key, run);
   run();
-  if (!bound.has(key)) {
-    bound.add(key);
-    document.addEventListener("astro:page-load", run);
-  }
 }

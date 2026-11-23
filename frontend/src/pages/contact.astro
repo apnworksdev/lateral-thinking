@@ -12,7 +12,7 @@ const contact = await getContactPage();
   <Menu />
   {
     contact ? (
-      <HomePage home={contact} />
+      <HomePage home={contact} typewriterSessionKey="contact" />
     ) : (
       <p class="home-empty">Publica Contact en el Studio para verla aquí.</p>
     )

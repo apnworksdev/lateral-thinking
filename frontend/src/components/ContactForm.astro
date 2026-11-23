@@ -12,7 +12,11 @@ const { title, sanity } = Astro.props;
     <button type="button" class="us-form__back bull-5-mono bull-5-mono--sm" data-close-form>
       [X] BACK
     </button>
-    {title && <h2 class="us-form__title neu-haas-display" data-sanity={sanity}>{title}</h2>}
+    {title && (
+      <h2 class="us-form__title neu-haas-display" data-typewriter-desktop data-sanity={sanity}>
+        {title}
+      </h2>
+    )}
     <form class="us-form__fields" data-contact-form>
       <label class="us-form__field">
         <span class="bull-5-mono bull-5-mono--sm">Name</span>
@@ -53,8 +57,10 @@ const { title, sanity } = Astro.props;
     panel.hidden = false;
     panel.scrollIntoView({ block: "start" });
     const title = panel.querySelector(".us-form__title");
-    if (title instanceof HTMLElement) playTypewriter(title);
-    panel.querySelector("input")?.focus();
+    if (title instanceof HTMLElement && window.matchMedia("(min-width: 1024px)").matches) {
+      playTypewriter(title);
+      panel.querySelector("input")?.focus();
+    }
   };
 
   const close = () => {
