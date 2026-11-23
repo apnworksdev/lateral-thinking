@@ -1,0 +1,8 @@
+[build]
+  command = "npm --workspace app run build"
+  publish = "frontend/dist"
+
+[build.environment]
+  # PUBLIC_* se embebe a propósito en el cliente; el escáner de Netlify no debe fallar por eso.
+  # No omitir SANITY_API_READ_TOKEN: es secreto y solo debe vivir en servidor.
+  SECRETS_SCAN_OMIT_KEYS = "PUBLIC_SANITY_STUDIO_DATASET,PUBLIC_SANITY_STUDIO_PROJECT_ID,PUBLIC_SANITY_STUDIO_URL,PUBLIC_SANITY_VISUAL_EDITING_ENABLED"
