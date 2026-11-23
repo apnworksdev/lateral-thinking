@@ -15,18 +15,20 @@ const studioUrl = PUBLIC_SANITY_STUDIO_URL || "http://localhost:3333";
 import sanity from "@sanity/astro";
 import react from "@astrojs/react";
 
-// Change this depending on your hosting provider (Vercel, Netlify etc)
-// https://docs.astro.build/en/guides/server-side-rendering/#adding-an-adapter
-import vercel from "@astrojs/vercel";
+// Netlify adapter for on-demand/SSR routes (contact API, Sanity pages, etc.)
+// https://docs.astro.build/en/guides/deploy/netlify/
+import netlify from "@astrojs/netlify";
 
 import tailwindcss from "@tailwindcss/vite";
 
 // https://astro.build/config
 export default defineConfig({
   // Set to 'server' for Visual Editing and on-demand rendering
-  // Requires an adapter for deployment (Vercel, Netlify, Cloudflare, Node, etc.)
   output: "server",
-  adapter: vercel(),
+  adapter: netlify({
+    // Astro 6 ya no reexporta verifyOptions desde "astro/assets"; evita el image service de Netlify.
+    imageCDN: false,
+  }),
   integrations: [
     sanity({
       projectId,

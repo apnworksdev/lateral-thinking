@@ -1,6 +1,9 @@
+# Site Astro SSR: el adapter escribe Functions en frontend/.netlify
+# base = frontend para que Netlify las descubra (sin esto → Page Not Found).
 [build]
-  command = "npm --workspace app run build"
-  publish = "frontend/dist"
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
 
 [build.environment]
   # PUBLIC_* se embebe a propósito en el cliente; el escáner de Netlify no debe fallar por eso.
