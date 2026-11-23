@@ -33,12 +33,17 @@ if (!project) {
   return Astro.rewrite("/404");
 }
 
-const files = (project.files ?? []).flatMap((file) => {
+type GalleryFile =
+  | { key: string | undefined; source: "image"; alt: string; src: string; full: string }
+  | { key: string | undefined; source: "file"; src: string }
+  | { key: string | undefined; source: "vimeo"; src: string };
+
+const files = (project.files ?? []).flatMap((file): GalleryFile[] => {
   if (file.source === "image" && file.image?.asset) {
     return [
       {
         key: file._key,
-        source: "image" as const,
+        source: "image",
         alt: file.alt || "",
         src: urlFor(file.image).width(1600).auto("format").quality(80).url(),
         full: urlFor(file.image).width(2800).auto("format").quality(85).url(),
@@ -46,11 +51,11 @@ const files = (project.files ?? []).flatMap((file) => {
     ];
   }
   if (file.source === "file" && file.videoUrl) {
-    return [{ key: file._key, source: "file" as const, src: file.videoUrl }];
+    return [{ key: file._key, source: "file", src: file.videoUrl }];
   }
   if (file.source === "vimeo") {
     const src = vimeoPlayerUrl(file.vimeoUrl, false);
-    if (src) return [{ key: file._key, source: "vimeo" as const, src }];
+    if (src) return [{ key: file._key, source: "vimeo", src }];
   }
   return [];
 });

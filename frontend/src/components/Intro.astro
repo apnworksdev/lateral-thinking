@@ -106,7 +106,7 @@ const images = (page?.images ?? []).flatMap((image) => {
     } else {
       const svg = scene.querySelector(".us__lines");
       const node = scene.querySelector("[data-us-node]");
-      const items = [...scene.querySelectorAll(".us__gallery li")];
+      const items = [...scene.querySelectorAll<HTMLElement>(".us__gallery li")];
 
       if (svg instanceof SVGSVGElement && node instanceof HTMLElement && items.length > 0) {
         const lines = items.map(() => {
