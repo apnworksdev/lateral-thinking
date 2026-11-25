@@ -291,6 +291,9 @@ const files = (project.files ?? []).flatMap((file): GalleryFile[] => {
     });
   }
 
+  // Debe superar ::view-transition-group(work-title) (1.2s). Si soltamos antes, el título “sube” de golpe.
+  const titleTransitionMs = 1300;
+
   function releaseTitle() {
     const title = document.querySelector(".project__title");
     if (!(title instanceof HTMLElement)) return;
@@ -317,15 +320,26 @@ const files = (project.files ?? []).flatMap((file): GalleryFile[] => {
     title.style.overflowWrap = "break-word";
   }
 
+  function scheduleTitleSettle() {
+    if (!document.querySelector(".project__title")) return;
+    const prev = Number(document.documentElement.dataset.titleSettleTimer || 0);
+    if (prev) window.clearTimeout(prev);
+    // No tocar el título hasta acabar la VT: soltar name/width a mitad = salto vertical.
+    document.documentElement.dataset.titleSettleTimer = String(
+      window.setTimeout(() => {
+        settleProjectTitle();
+        releaseTitle();
+        delete document.documentElement.dataset.titleSettleTimer;
+      }, titleTransitionMs),
+    );
+  }
+
   whenProject();
   bindViewer();
-  settleProjectTitle();
-  releaseTitle();
   document.addEventListener("astro:page-load", () => {
     whenProject();
     bindViewer();
-    settleProjectTitle();
-    window.setTimeout(releaseTitle, 1300);
+    scheduleTitleSettle();
   });
   window.addEventListener("resize", sizeGallery);
 </script>

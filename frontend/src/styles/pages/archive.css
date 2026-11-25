@@ -78,12 +78,20 @@ html:has(.archive) {
 }
 
 .archive__field-text {
-  display: inline-block;
+  display: inline-flex;
+  align-items: baseline;
   max-width: 100%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  line-height: 1;
   vertical-align: top;
+  transform: translate3d(0, 0, 0);
+}
+
+.archive__field-copy {
+  flex: none;
+  line-height: 1;
 }
 
 .archive__field-copy + .archive__field-copy {
@@ -91,7 +99,6 @@ html:has(.archive) {
 }
 
 .archive__line:hover .is-clipped .archive__field-text {
-  display: inline-flex;
   max-width: none;
   overflow: visible;
   text-overflow: clip;
@@ -99,7 +106,6 @@ html:has(.archive) {
 }
 
 .archive__line:hover .is-clipped .archive__field-copy {
-  flex: none;
   padding-right: 2.5em;
 }
 
@@ -109,11 +115,11 @@ html:has(.archive) {
 
 @keyframes archive-marquee {
   from {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
 
   to {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
@@ -181,7 +187,7 @@ html:has(.archive) {
 }
 
 .archive__field-copy.is-typing .home__type {
-  line-height: normal;
+  line-height: 1;
   color: #dfdfdf;
   -webkit-text-fill-color: #dfdfdf;
 }
@@ -198,12 +204,10 @@ html:has(.archive) {
   -webkit-text-fill-color: #dfdfdf;
 }
 
+/* Misma pista (2 copias) que el marquee: no tocar display al tipar; evita el salto vertical. */
 .archive__line:hover .is-clipped .archive__field-text:has(.is-typing) {
   animation: none;
-}
-
-.archive__line:hover .is-clipped .archive__field-text:has(.is-typing) .archive__field-copy + .archive__field-copy {
-  display: none;
+  transform: translate3d(0, 0, 0);
 }
 
 .archive__empty {

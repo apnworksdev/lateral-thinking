@@ -414,15 +414,28 @@ html.project-viewer-open body {
 
 .project__copy.project__long {
   --project-long-row: 320px;
+  --project-long-gap: 20px;
+  --project-long-cols: 6;
   display: block;
-  height: var(--project-long-row);
+  width: 100%;
   max-width: none;
-  overflow: hidden;
-  column-count: 6;
-  column-gap: 20px;
-  column-fill: auto;
+  height: var(--project-long-row);
+  margin-inline: 0;
   padding: 100px 70px 40px 70px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 70px;
+  scrollbar-width: none;
+  column-count: var(--project-long-cols);
+  column-gap: var(--project-long-gap);
+  column-fill: auto;
   color: var(--color-gray-text);
+}
+
+.project__copy.project__long::-webkit-scrollbar {
+  display: none;
 }
 
 .project__copy.project__long > * {
@@ -430,6 +443,8 @@ html.project-viewer-open body {
   margin: 0;
   orphans: 1;
   widows: 1;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .project__copy.project__long > * + * {
@@ -541,8 +556,11 @@ html.project-viewer-open body {
     display: flex;
     flex-direction: column;
     gap: 1em;
+    width: auto;
     height: auto;
     overflow: visible;
+    scroll-snap-type: none;
+    scroll-padding-inline: 0;
     column-count: auto;
     column-gap: normal;
     column-fill: auto;
