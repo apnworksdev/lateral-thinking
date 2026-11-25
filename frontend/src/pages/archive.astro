@@ -104,7 +104,7 @@ function formatDate(value?: string) {
 </Layout>
 
 <script>
-  import { typewriteText } from "../scripts/typewriter";
+  import { typewriteInline } from "../scripts/typewriter";
 
   let resizeArchive = () => {};
 
@@ -135,13 +135,16 @@ function formatDate(value?: string) {
   const texts = [...document.querySelectorAll<HTMLElement>(".archive__field-text")];
 
   texts.forEach((text) => {
-    if (text.querySelector(".archive__field-copy")) return;
+    if (text.querySelector(".archive__field-track")) return;
+    const track = document.createElement("span");
+    track.className = "archive__field-track";
     const copy = document.createElement("span");
     copy.className = "archive__field-copy";
     while (text.firstChild) copy.append(text.firstChild);
     const loop = copy.cloneNode(true) as HTMLElement;
     loop.setAttribute("aria-hidden", "true");
-    text.append(copy, loop);
+    track.append(copy, loop);
+    text.append(track);
   });
 
   function markClipped() {
@@ -269,7 +272,9 @@ function formatDate(value?: string) {
         typing?.abort();
         typing = null;
         line.querySelectorAll(".home__type").forEach((layer) => layer.remove());
-        line.querySelectorAll(".is-typing").forEach((node) => node.classList.remove("is-typing"));
+        line.querySelectorAll(".is-typing, .is-typed, .is-typing-inline").forEach((node) => {
+          node.classList.remove("is-typing", "is-typed", "is-typing-inline");
+        });
       };
 
       const start = () => {
@@ -280,9 +285,9 @@ function formatDate(value?: string) {
         const token = ++run;
         typing = new AbortController();
         const signal = typing.signal;
-        nodes.forEach((node) => node.classList.add("is-typing"));
-        void Promise.all(nodes.map((node) => typewriteText(node, signal))).then(() => {
-          if (token === run) typing = null;
+        void Promise.all(nodes.map((node) => typewriteInline(node, signal))).then(() => {
+          if (token !== run) return;
+          typing = null;
         });
       };
 

@@ -11,7 +11,7 @@ function desktopOnlyTarget(target: HTMLElement) {
 }
 
 function releaseTypewriter(target: HTMLElement) {
-  target.classList.remove("is-typing");
+  target.classList.remove("is-typing", "is-typed");
   target.querySelector(".home__type")?.remove();
   delete target.dataset.typing;
 }
@@ -28,7 +28,13 @@ function textNodes(root: ParentNode) {
   return nodes;
 }
 
-function typewrite(target: HTMLElement, signal?: AbortSignal) {
+type TypewriteOptions = {
+  /** Si true, deja el overlay tipado hasta que el caller lo quite (evita salto al soltar). */
+  retainOverlay?: boolean;
+};
+
+function typewrite(target: HTMLElement, signal?: AbortSignal, options?: TypewriteOptions) {
+  const retainOverlay = options?.retainOverlay === true;
   return new Promise<void>((resolve) => {
     let settled = false;
     let timer = 0;
@@ -70,7 +76,8 @@ function typewrite(target: HTMLElement, signal?: AbortSignal) {
       finish();
       return;
     }
-    layer = document.createElement("div");
+    // span: un div dentro de .archive__field-copy (span) parte la caja inline y salta al quitarlo.
+    layer = document.createElement("span");
     layer.className = "home__type";
     layer.setAttribute("aria-hidden", "true");
     layer.innerHTML = target.innerHTML;
@@ -97,12 +104,19 @@ function typewrite(target: HTMLElement, signal?: AbortSignal) {
       }
       if (count >= total) {
         window.clearInterval(timer);
-        finish();
-        cleanup = window.setTimeout(() => {
-          if (!layer?.isConnected) return;
-          layer.remove();
+        layer?.querySelector(".home__caret")?.remove();
+        if (retainOverlay) {
+          // Mantiene el overlay (misma caja) pero suelta is-typing para que el marquee pueda correr.
           target.classList.remove("is-typing");
-        }, 350);
+          target.classList.add("is-typed");
+        } else {
+          cleanup = window.setTimeout(() => {
+            if (!layer?.isConnected) return;
+            layer.remove();
+            target.classList.remove("is-typing");
+          }, 350);
+        }
+        finish();
         return;
       }
       count += 1;
@@ -129,8 +143,70 @@ function typewrite(target: HTMLElement, signal?: AbortSignal) {
   });
 }
 
-export function typewriteText(target: HTMLElement, signal?: AbortSignal) {
-  return typewrite(target, signal);
+export function typewriteText(target: HTMLElement, signal?: AbortSignal, options?: TypewriteOptions) {
+  return typewrite(target, signal, options);
+}
+
+/** Tipado en el texto real (sin overlay). Para Archive: evita pegar arriba y el salto al soltar. */
+export function typewriteInline(target: HTMLElement, signal?: AbortSignal) {
+  return new Promise<void>((resolve) => {
+    let settled = false;
+    let timer = 0;
+    const mark = "is-typing-inline";
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      resolve();
+    };
+    const nodes = textNodes(target).filter((node) => !node.parentElement?.closest(".home__type"));
+    const full = nodes.map((node) => node.textContent ?? "");
+    const total = full.reduce((sum, text) => sum + text.length, 0);
+    const restore = () => {
+      nodes.forEach((node, index) => {
+        node.textContent = full[index] ?? "";
+      });
+      target.classList.remove(mark);
+    };
+    const abort = () => {
+      window.clearInterval(timer);
+      restore();
+      finish();
+    };
+    if (signal?.aborted) {
+      finish();
+      return;
+    }
+    signal?.addEventListener("abort", abort, { once: true });
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !total) {
+      restore();
+      finish();
+      return;
+    }
+    target.classList.add(mark);
+    nodes.forEach((node) => {
+      node.textContent = "";
+    });
+    let count = 0;
+    timer = window.setInterval(() => {
+      if (signal?.aborted || !target.isConnected) {
+        abort();
+        return;
+      }
+      count += 1;
+      let left = count;
+      nodes.forEach((node, index) => {
+        const text = full[index] ?? "";
+        const take = Math.min(text.length, Math.max(0, left));
+        node.textContent = text.slice(0, take);
+        left -= text.length;
+      });
+      if (count >= total) {
+        window.clearInterval(timer);
+        target.classList.remove(mark);
+        finish();
+      }
+    }, typeStep);
+  });
 }
 
 async function typewriteSequence(nodes: HTMLElement[], signal?: AbortSignal) {
